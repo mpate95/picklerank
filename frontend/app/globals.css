@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-ink text-slate-100 antialiased;
+  background-image:
+    radial-gradient(circle at top left, rgba(121, 242, 255, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(214, 255, 107, 0.12), transparent 20%),
+    linear-gradient(180deg, #081219 0%, #09131a 100%);
+}
+
+a {
+  @apply text-inherit no-underline;
+}
+
+* {
+  scrollbar-color: #2d465b #0b1620;
+}
