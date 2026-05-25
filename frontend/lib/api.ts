@@ -19,23 +19,11 @@ import {
 } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
-const CSRF_COOKIE_NAME = "picklerank_csrf_token";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
+let csrfToken: string | null = null;
 
-function getCookie(name: string) {
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  const prefix = `${name}=`;
-  for (const cookie of document.cookie.split(";")) {
-    const trimmed = cookie.trim();
-    if (trimmed.startsWith(prefix)) {
-      return decodeURIComponent(trimmed.slice(prefix.length));
-    }
-  }
-
-  return null;
+export function setCsrfToken(nextCsrfToken: string | null) {
+  csrfToken = nextCsrfToken;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -45,7 +33,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const method = (init?.method ?? "GET").toUpperCase();
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
-    const csrfToken = getCookie(CSRF_COOKIE_NAME);
     if (csrfToken && !headers.has(CSRF_HEADER_NAME)) {
       headers.set(CSRF_HEADER_NAME, csrfToken);
     }

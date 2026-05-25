@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, ReactNode, useContext, useMemo } from "react";
 
-import { api } from "@/lib/api";
+import { api, setCsrfToken } from "@/lib/api";
 import { AuthLoginInput, AuthSessionResponse } from "@/lib/types";
 
 type AuthContextValue = {
@@ -18,6 +18,7 @@ const anonymousSession: AuthSessionResponse = {
   is_authenticated: false,
   is_admin: false,
   username: null,
+  csrf_token: null,
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -36,22 +37,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(payload: AuthLoginInput) {
     const result = await loginMutation.mutateAsync(payload);
+    setCsrfToken(result.session.csrf_token ?? null);
     queryClient.setQueryData(["auth", "session"], result.session);
   }
 
   async function logout() {
     await api.logout().catch(() => undefined);
+    setCsrfToken(null);
     queryClient.setQueryData(["auth", "session"], anonymousSession);
   }
 
   const value = useMemo<AuthContextValue>(
-    () => ({
-      session: sessionQuery.data ?? anonymousSession,
-      isAdmin: Boolean(sessionQuery.data?.is_admin),
-      isLoading: sessionQuery.isLoading || loginMutation.isPending,
-      login,
-      logout,
-    }),
+    () => {
+      const session = sessionQuery.data ?? anonymousSession;
+      setCsrfToken(session.csrf_token ?? null);
+      return {
+        session,
+        isAdmin: Boolean(session.is_admin),
+        isLoading: sessionQuery.isLoading || loginMutation.isPending,
+        login,
+        logout,
+      };
+    },
     [loginMutation.isPending, sessionQuery.data, sessionQuery.isLoading],
   );
 

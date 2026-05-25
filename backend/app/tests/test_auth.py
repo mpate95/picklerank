@@ -9,6 +9,7 @@ def test_public_session_reports_anonymous(public_client) -> None:
         "is_authenticated": False,
         "is_admin": False,
         "username": None,
+        "csrf_token": None,
     }
 
 
@@ -25,7 +26,9 @@ def test_admin_login_returns_bearer_token(public_client) -> None:
         "is_authenticated": True,
         "is_admin": True,
         "username": settings.admin_username,
+        "csrf_token": body["session"]["csrf_token"],
     }
+    assert body["session"]["csrf_token"]
     set_cookie = response.headers.get("set-cookie", "")
     assert f"{settings.auth_cookie_name}=" in set_cookie
 

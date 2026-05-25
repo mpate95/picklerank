@@ -25,13 +25,15 @@ def require_admin(identity: AuthIdentity | None = Depends(get_current_identity))
 
 
 @router.get("/session", response_model=AuthSessionResponse)
-def get_auth_session(identity: AuthIdentity | None = Depends(get_current_identity)) -> AuthSessionResponse:
+def get_auth_session(request: Request, identity: AuthIdentity | None = Depends(get_current_identity)) -> AuthSessionResponse:
+    settings = get_settings()
     if identity is None:
-        return AuthSessionResponse(is_authenticated=False, is_admin=False, username=None)
+        return AuthSessionResponse(is_authenticated=False, is_admin=False, username=None, csrf_token=None)
     return AuthSessionResponse(
         is_authenticated=True,
         is_admin=identity.is_admin,
         username=identity.username,
+        csrf_token=request.cookies.get(settings.csrf_cookie_name),
     )
 
 
@@ -75,6 +77,7 @@ def login(payload: AuthLoginRequest, request: Request, response: Response) -> Au
             is_authenticated=True,
             is_admin=True,
             username=settings.admin_username,
+            csrf_token=csrf_token,
         ),
     )
 

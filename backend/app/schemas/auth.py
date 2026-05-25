@@ -5,6 +5,7 @@ class AuthSessionResponse(BaseModel):
     is_authenticated: bool
     is_admin: bool
     username: str | None
+    csrf_token: str | None = None
 
 
 class AuthLoginRequest(BaseModel):

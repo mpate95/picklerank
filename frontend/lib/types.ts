@@ -6,6 +6,7 @@ export type AuthSessionResponse = {
   is_authenticated: boolean;
   is_admin: boolean;
   username: string | null;
+  csrf_token?: string | null;
 };
 
 export type AuthLoginInput = {
