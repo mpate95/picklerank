@@ -1,6 +1,7 @@
 services:
   - type: web
     name: picklerank-api
+    plan: free
     runtime: python
     rootDir: backend
     buildCommand: pip install -e ".[dev]"
@@ -30,5 +31,6 @@ services:
 
 databases:
   - name: picklerank-db
+    plan: free
     databaseName: picklerank
     user: picklerank
