@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { DashboardSummaryResponse } from "@/lib/types";
@@ -9,7 +9,9 @@ import { formatRating } from "@/lib/formatters";
 import { Card } from "@/components/ui/Card";
 
 export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse["rating_trends"] }) {
-  const { points, visibleTrends, labelByPlayerId } = useMemo(() => {
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
+
+  const { points, sortedTrends, labelByPlayerId } = useMemo(() => {
     const sortedTrends = [...trends].sort((left, right) => {
       const leftLatest = left.points[left.points.length - 1]?.rating ?? 0;
       const rightLatest = right.points[right.points.length - 1]?.rating ?? 0;
@@ -47,12 +49,22 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
 
     return {
       points: rows,
-      visibleTrends: sortedTrends,
+      sortedTrends,
       labelByPlayerId: labelMap,
     };
   }, [trends]);
 
   const palette = ["#d6ff6b", "#79f2ff", "#ff8a5b", "#f97316", "#f472b6", "#60a5fa", "#34d399", "#facc15"];
+  const activePlayerIds = selectedPlayerIds.length > 0 ? selectedPlayerIds : sortedTrends.map((trend) => trend.player_id);
+  const visibleTrends = sortedTrends.filter((trend) => activePlayerIds.includes(trend.player_id));
+
+  function toggleTrend(playerId: string) {
+    setSelectedPlayerIds((current) =>
+      current.includes(playerId)
+        ? current.filter((id) => id !== playerId)
+        : [...current, playerId],
+    );
+  }
 
   return (
     <Card>
@@ -62,18 +74,27 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
       </div>
       {visibleTrends.length > 0 ? (
         <div className="mb-4 flex flex-wrap gap-2">
-          {visibleTrends.map((trend, index) => (
-            <div
+          {sortedTrends.map((trend, index) => {
+            const isActive = activePlayerIds.includes(trend.player_id);
+            return (
+              <button
               key={trend.player_id}
-              className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-slate-950/35 px-3 py-1 text-xs text-slate-300"
+              type="button"
+              onClick={() => toggleTrend(trend.player_id)}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition ${
+                isActive
+                  ? "border-white/12 bg-slate-950/45 text-slate-100"
+                  : "border-white/6 bg-slate-950/15 text-slate-500"
+              }`}
             >
               <span
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: palette[index % palette.length] }}
               />
               <span>{trend.display_name}</span>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
       ) : null}
       <div className="h-80">
