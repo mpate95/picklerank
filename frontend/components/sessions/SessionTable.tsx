@@ -73,7 +73,12 @@ export function SessionTable({ sessions }: { sessions: SessionResponse[] }) {
                   variant="ghost"
                   className="px-0 text-coral hover:bg-transparent hover:text-white"
                   disabled={session.match_count > 0 || deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate(session.id)}
+                  onClick={() => {
+                    if (!window.confirm(`Delete ${session.name}? This only works while the session has no matches.`)) {
+                      return;
+                    }
+                    deleteMutation.mutate(session.id);
+                  }}
                 >
                   Delete
                 </Button>
@@ -126,7 +131,12 @@ export function SessionTable({ sessions }: { sessions: SessionResponse[] }) {
                         variant="ghost"
                         className="px-0 text-coral hover:bg-transparent hover:text-white"
                         disabled={session.match_count > 0 || deleteMutation.isPending}
-                        onClick={() => deleteMutation.mutate(session.id)}
+                        onClick={() => {
+                          if (!window.confirm(`Delete ${session.name}? This only works while the session has no matches.`)) {
+                            return;
+                          }
+                          deleteMutation.mutate(session.id);
+                        }}
                       >
                         Delete
                       </Button>

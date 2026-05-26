@@ -16,6 +16,7 @@ import {
   SessionDetailResponse,
   SessionResponse,
   TeamStatsResponse,
+  UpdatePlayerInput,
 } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
@@ -67,6 +68,8 @@ export const api = {
   getPlayer: (playerId: string) => request<PlayerDetailResponse>(`/players/${playerId}`),
   createPlayer: (payload: CreatePlayerInput) =>
     request<PlayerResponse>("/players", { method: "POST", body: JSON.stringify(payload) }),
+  updatePlayer: (playerId: string, payload: UpdatePlayerInput) =>
+    request<PlayerResponse>(`/players/${playerId}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deactivatePlayer: (playerId: string) =>
     request<void>(`/players/${playerId}`, { method: "DELETE" }),
   getSessions: () => request<SessionResponse[]>("/sessions"),

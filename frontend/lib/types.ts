@@ -177,6 +177,13 @@ export type CreatePlayerInput = {
   email?: string | null;
 };
 
+export type UpdatePlayerInput = {
+  display_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+};
+
 export type CreateSessionInput = {
   name: string;
   session_date: string;

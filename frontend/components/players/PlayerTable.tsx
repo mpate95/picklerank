@@ -12,7 +12,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
-export function PlayerTable({ players }: { players: PlayerResponse[] }) {
+export function PlayerTable({
+  players,
+  onEdit,
+}: {
+  players: PlayerResponse[];
+  onEdit?: (player: PlayerResponse) => void;
+}) {
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const deactivateMutation = useMutation({
@@ -21,6 +27,7 @@ export function PlayerTable({ players }: { players: PlayerResponse[] }) {
       void queryClient.invalidateQueries({ queryKey: ["players"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
       void queryClient.invalidateQueries({ queryKey: ["rankings", "current"] });
+      void queryClient.invalidateQueries({ queryKey: ["player"] });
     },
   });
 
@@ -52,14 +59,24 @@ export function PlayerTable({ players }: { players: PlayerResponse[] }) {
                 </td>
                 {isAdmin ? (
                   <td className="py-3">
-                    <Button
-                      variant="ghost"
-                      className="px-0 text-coral hover:bg-transparent hover:text-white"
-                      disabled={!player.is_active || deactivateMutation.isPending}
-                      onClick={() => deactivateMutation.mutate(player.id)}
-                    >
-                      Deactivate
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <Button variant="ghost" className="px-0 hover:bg-transparent hover:text-white" onClick={() => onEdit?.(player)}>
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="px-0 text-coral hover:bg-transparent hover:text-white"
+                        disabled={!player.is_active || deactivateMutation.isPending}
+                        onClick={() => {
+                          if (!window.confirm(`Deactivate ${player.display_name}? They will remain in historical results.`)) {
+                            return;
+                          }
+                          deactivateMutation.mutate(player.id);
+                        }}
+                      >
+                        Deactivate
+                      </Button>
+                    </div>
                   </td>
                 ) : null}
               </tr>

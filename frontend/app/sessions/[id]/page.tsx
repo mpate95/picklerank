@@ -69,7 +69,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
               variant="ghost"
               className="text-coral hover:bg-transparent hover:text-white"
               disabled={data.match_count > 0 || deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate()}
+              onClick={() => {
+                if (!window.confirm(`Delete ${data.name}? This only works while the session has no matches.`)) {
+                  return;
+                }
+                deleteMutation.mutate();
+              }}
             >
               Delete session
             </Button>

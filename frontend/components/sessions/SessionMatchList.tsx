@@ -54,7 +54,12 @@ export function SessionMatchList({ matches, sessionId }: { matches: MatchRespons
                   variant="ghost"
                   className="px-0 text-coral hover:bg-transparent hover:text-white"
                   disabled={match.status === "voided" || voidMutation.isPending}
-                  onClick={() => voidMutation.mutate(match.id)}
+                  onClick={() => {
+                    if (!window.confirm("Delete this match? Ranked results may affect ratings and only eligible matches can be voided.")) {
+                      return;
+                    }
+                    voidMutation.mutate(match.id);
+                  }}
                 >
                   {match.status === "voided" ? "Voided" : "Delete match"}
                 </Button>
