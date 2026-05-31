@@ -36,9 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   async function login(payload: AuthLoginInput) {
-    const result = await loginMutation.mutateAsync(payload);
-    setCsrfToken(result.session.csrf_token ?? null);
-    queryClient.setQueryData(["auth", "session"], result.session);
+    await loginMutation.mutateAsync(payload);
+    const session = await api.getAuthSession();
+    if (!session.is_admin) {
+      throw new Error("Login succeeded, but the admin session was not established. Verify the Vercel API proxy is configured and deployed.");
+    }
+    setCsrfToken(session.csrf_token ?? null);
+    queryClient.setQueryData(["auth", "session"], session);
   }
 
   async function logout() {

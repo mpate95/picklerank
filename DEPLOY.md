@@ -71,8 +71,10 @@ https://picklerank-api.onrender.com
 3. Set this environment variable:
 
 ```text
-NEXT_PUBLIC_API_BASE_URL=https://your-render-api.onrender.com
+API_BASE_URL=https://your-render-api.onrender.com
 ```
+
+You can also keep using `NEXT_PUBLIC_API_BASE_URL` if you already have it set, but `API_BASE_URL` is preferred because the browser no longer needs the backend URL directly.
 
 4. Deploy.
 
@@ -98,7 +100,11 @@ https://picklerank.vercel.app,https://picklerank-git-main-yourteam.vercel.app
 
 Redeploy the backend after changing CORS values.
 
-## 5. Smoke test production
+## 5. Why this proxy matters
+
+The frontend now sends browser requests to `/api/...` on the Vercel app, and Vercel rewrites those requests to the Render backend. That keeps the admin session cookie first-party to the frontend domain, which avoids third-party cookie blocking in browsers.
+
+## 6. Smoke test production
 
 Check these:
 
