@@ -149,10 +149,16 @@ export default function DashboardPage() {
         />
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <LeaderboardPreview rows={data.leaderboard} />
-        <RecentMatches matches={data.recent_matches} />
+        <div className="xl:row-span-2">
+          <LeaderboardPreview rows={data.leaderboard} />
+        </div>
+        <div className="order-3 xl:order-2">
+          <RecentMatches matches={data.recent_matches} />
+        </div>
+        <div className="order-2 xl:order-3">
+          <TeamPerformanceTable teams={teams} />
+        </div>
       </div>
-      <TeamPerformanceTable teams={teams} />
       <RatingTrendChart trends={data.rating_trends} />
     </div>
   );
