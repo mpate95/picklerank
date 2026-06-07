@@ -10,14 +10,18 @@ type Props = {
   players: PlayerResponse[];
   selectedIds: string[];
   onToggle: (playerId: string) => void;
+  maxPlayers: number;
   score: number;
   onScoreChange: (value: number) => void;
 };
 
-export function TeamSelector({ title, players, selectedIds, onToggle, score, onScoreChange }: Props) {
+export function TeamSelector({ title, players, selectedIds, onToggle, maxPlayers, score, onScoreChange }: Props) {
   return (
     <div className="rounded-3xl border border-line bg-slate-950/35 p-4">
       <h4 className="text-lg font-semibold text-white">{title}</h4>
+      <p className="mt-1 text-xs text-slate-400">
+        Select {maxPlayers} {maxPlayers === 1 ? "player" : "players"}
+      </p>
       <div className="mt-4 grid gap-2">
         {players.map((player) => {
           const selected = selectedIds.includes(player.id);

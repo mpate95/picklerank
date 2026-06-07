@@ -14,6 +14,7 @@ import { TeamSelector } from "@/components/matches/TeamSelector";
 export function MatchResultForm() {
   const queryClient = useQueryClient();
   const [sessionId, setSessionId] = useState("");
+  const [matchType, setMatchType] = useState<"singles" | "doubles">("doubles");
   const [isRanked, setIsRanked] = useState(true);
   const [team1Ids, setTeam1Ids] = useState<string[]>([]);
   const [team2Ids, setTeam2Ids] = useState<string[]>([]);
@@ -36,6 +37,7 @@ export function MatchResultForm() {
       setTeam2Ids([]);
       setTeam1Score(11);
       setTeam2Score(8);
+      setMatchType("doubles");
       setIsRanked(true);
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: ["matches"] }),
@@ -49,12 +51,19 @@ export function MatchResultForm() {
 
   const availablePlayers = useMemo(() => players.filter((player) => player.is_active), [players]);
   const openSessions = useMemo(() => sessions.filter((session) => !session.is_completed), [sessions]);
+  const maxPlayersPerTeam = matchType === "singles" ? 1 : 2;
+
+  function selectMatchType(nextMatchType: "singles" | "doubles") {
+    setMatchType(nextMatchType);
+    setTeam1Ids((current) => current.slice(0, nextMatchType === "singles" ? 1 : 2));
+    setTeam2Ids((current) => current.slice(0, nextMatchType === "singles" ? 1 : 2));
+  }
 
   function toggleSelection(playerId: string, team: 1 | 2) {
     if (team === 1) {
       setTeam1Ids((current) => {
         const next = current.includes(playerId) ? current.filter((id) => id !== playerId) : [...current, playerId];
-        return next.slice(0, 2);
+        return next.slice(0, maxPlayersPerTeam);
       });
       setTeam2Ids((current) => current.filter((id) => id !== playerId));
       return;
@@ -62,7 +71,7 @@ export function MatchResultForm() {
 
     setTeam2Ids((current) => {
       const next = current.includes(playerId) ? current.filter((id) => id !== playerId) : [...current, playerId];
-      return next.slice(0, 2);
+      return next.slice(0, maxPlayersPerTeam);
     });
     setTeam1Ids((current) => current.filter((id) => id !== playerId));
   }
@@ -71,7 +80,7 @@ export function MatchResultForm() {
     event.preventDefault();
     mutation.mutate({
       session_id: sessionId,
-      match_type: "doubles",
+      match_type: matchType,
       is_ranked: isRanked,
       team_1: { player_ids: team1Ids, score: team1Score },
       team_2: { player_ids: team2Ids, score: team2Score },
@@ -104,7 +113,30 @@ export function MatchResultForm() {
             ) : null}
           </div>
           <div>
-            <Label>Match type</Label>
+            <Label>Format</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className={`flex h-[50px] items-center justify-center rounded-2xl border text-sm font-semibold ${
+                  matchType === "singles" ? "border-cyan bg-cyan/10 text-cyan" : "border-line bg-slate-950/60 text-slate-300"
+                }`}
+                onClick={() => selectMatchType("singles")}
+              >
+                Singles
+              </button>
+              <button
+                type="button"
+                className={`flex h-[50px] items-center justify-center rounded-2xl border text-sm font-semibold ${
+                  matchType === "doubles" ? "border-cyan bg-cyan/10 text-cyan" : "border-line bg-slate-950/60 text-slate-300"
+                }`}
+                onClick={() => selectMatchType("doubles")}
+              >
+                Doubles
+              </button>
+            </div>
+          </div>
+          <div>
+            <Label>Rating impact</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -140,6 +172,7 @@ export function MatchResultForm() {
             players={availablePlayers}
             selectedIds={team1Ids}
             onToggle={(playerId) => toggleSelection(playerId, 1)}
+            maxPlayers={maxPlayersPerTeam}
             score={team1Score}
             onScoreChange={setTeam1Score}
           />
@@ -148,13 +181,17 @@ export function MatchResultForm() {
             players={availablePlayers}
             selectedIds={team2Ids}
             onToggle={(playerId) => toggleSelection(playerId, 2)}
+            maxPlayers={maxPlayersPerTeam}
             score={team2Score}
             onScoreChange={setTeam2Score}
           />
         </div>
         {mutation.error ? <p className="text-sm text-coral">{mutation.error.message}</p> : null}
         {mutation.isSuccess ? <p className="text-sm text-lime">Match saved. Enter the next one when ready.</p> : null}
-        <Button type="submit" disabled={mutation.isPending || !sessionId}>
+        <Button
+          type="submit"
+          disabled={mutation.isPending || !sessionId || team1Ids.length !== maxPlayersPerTeam || team2Ids.length !== maxPlayersPerTeam}
+        >
           {mutation.isPending ? "Saving..." : `Save ${isRanked ? "ranked" : "unranked"} match`}
         </Button>
       </form>

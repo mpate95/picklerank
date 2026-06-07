@@ -171,20 +171,27 @@ class MatchService:
         team_2: MatchTeamCreate,
         match_type: str,
     ) -> tuple[list[Player], list[Player]]:
-        if match_type != "doubles":
-            raise BadRequestError("Only doubles matches are supported in the MVP.")
+        if match_type not in {"singles", "doubles"}:
+            raise BadRequestError("Match type must be either singles or doubles.")
         if team_1.score == team_2.score:
             raise BadRequestError("Team scores cannot be equal.")
-        if len(team_1.player_ids) != 2 or len(team_2.player_ids) != 2:
-            raise BadRequestError("Each doubles team must contain exactly two players.")
 
         unique_player_ids = set([*team_1.player_ids, *team_2.player_ids])
-        if len(unique_player_ids) != 4:
-            raise BadRequestError("A doubles match must contain four unique players.")
+        if match_type == "singles":
+            if len(team_1.player_ids) != 1 or len(team_2.player_ids) != 1:
+                raise BadRequestError("Each singles team must contain exactly one player.")
+            if len(unique_player_ids) != 2:
+                raise BadRequestError("A singles match must contain two unique players.")
+        else:
+            if len(team_1.player_ids) != 2 or len(team_2.player_ids) != 2:
+                raise BadRequestError("Each doubles team must contain exactly two players.")
+            if len(unique_player_ids) != 4:
+                raise BadRequestError("A doubles match must contain four unique players.")
 
         players = self.player_repository.get_players_by_ids(db, list(unique_player_ids))
         players_by_id = {player.id: player for player in players}
-        if len(players_by_id) != 4:
+        expected_player_count = 2 if match_type == "singles" else 4
+        if len(players_by_id) != expected_player_count:
             missing_player_ids = unique_player_ids.difference(players_by_id.keys())
             missing_player_id = next(iter(missing_player_ids))
             raise NotFoundError("Player", str(missing_player_id))

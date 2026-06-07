@@ -12,7 +12,7 @@ export default function NewMatchPage() {
     <div className="space-y-6">
       <SectionHeading
         title="New Match"
-        description="Fast doubles entry built for quick score capture and immediate leaderboard updates."
+        description="Fast singles and doubles entry built for quick score capture and immediate leaderboard updates."
       />
       {isAdmin ? <MatchResultForm /> : <AdminNotice title="Match entry is admin only" />}
     </div>

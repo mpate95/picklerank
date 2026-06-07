@@ -194,7 +194,7 @@ export type CreateSessionInput = {
 
 export type CreateMatchInput = {
   session_id: string;
-  match_type: "doubles";
+  match_type: "singles" | "doubles";
   is_ranked: boolean;
   team_1: { player_ids: string[]; score: number };
   team_2: { player_ids: string[]; score: number };

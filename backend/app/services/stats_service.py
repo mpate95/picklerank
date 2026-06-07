@@ -134,6 +134,8 @@ class StatsService:
         stats_by_team: dict[tuple[uuid.UUID, uuid.UUID], AggregatedTeamStats] = {}
         for match in matches:
             for team in match.teams:
+                if len(team.team_players) != 2:
+                    continue
                 opponent_team = next(candidate for candidate in match.teams if candidate.team_number != team.team_number)
                 sorted_players = sorted(team.team_players, key=lambda team_player: team_player.player.display_name.lower())
                 key = tuple(team_player.player_id for team_player in sorted_players)

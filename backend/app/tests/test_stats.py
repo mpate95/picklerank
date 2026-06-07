@@ -18,13 +18,14 @@ def match_payload(
     team_1_player_ids: list[str],
     team_2_player_ids: list[str],
     *,
+    match_type: str = "doubles",
     team_1_score: int = 11,
     team_2_score: int = 8,
     is_ranked: bool = True,
 ) -> dict:
     return {
         "session_id": session_id,
-        "match_type": "doubles",
+        "match_type": match_type,
         "is_ranked": is_ranked,
         "team_1": {"player_ids": team_1_player_ids, "score": team_1_score},
         "team_2": {"player_ids": team_2_player_ids, "score": team_2_score},
@@ -131,3 +132,36 @@ def test_voided_matches_do_not_count_toward_stats(client) -> None:
     alpha_row = next(row for row in response.json() if row["display_name"] == "Alpha")
     assert alpha_row["games_played"] == 0
     assert alpha_row["current_streak"] == "-"
+
+
+def test_singles_matches_count_toward_player_stats_but_not_team_stats(client) -> None:
+    session = create_session(client)
+    alpha = create_player(client, "Alpha")
+    bravo = create_player(client, "Bravo")
+    charlie = create_player(client, "Charlie")
+    delta = create_player(client, "Delta")
+    echo = create_player(client, "Echo")
+    foxtrot = create_player(client, "Foxtrot")
+
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"]], [bravo["id"]], match_type="singles"),
+    )
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [charlie["id"], delta["id"]], [echo["id"], foxtrot["id"]]),
+    )
+
+    player_stats = client.get("/stats/players")
+    team_stats = client.get("/stats/teams")
+
+    assert player_stats.status_code == 200
+    alpha_row = next(row for row in player_stats.json() if row["display_name"] == "Alpha")
+    assert alpha_row["games_played"] == 1
+    assert alpha_row["wins"] == 1
+
+    assert team_stats.status_code == 200
+    body = team_stats.json()
+    assert len(body) == 2
+    assert all("Alpha" not in {row["player_1_name"], row["player_2_name"]} for row in body)
+    assert all("Bravo" not in {row["player_1_name"], row["player_2_name"]} for row in body)

@@ -13,10 +13,17 @@ def create_session(client) -> dict:
     return response.json()
 
 
-def match_payload(session_id: str, team_1_player_ids: list[str], team_2_player_ids: list[str], *, is_ranked: bool = True) -> dict:
+def match_payload(
+    session_id: str,
+    team_1_player_ids: list[str],
+    team_2_player_ids: list[str],
+    *,
+    match_type: str = "doubles",
+    is_ranked: bool = True,
+) -> dict:
     return {
         "session_id": session_id,
-        "match_type": "doubles",
+        "match_type": match_type,
         "is_ranked": is_ranked,
         "team_1": {"player_ids": team_1_player_ids, "score": 11},
         "team_2": {"player_ids": team_2_player_ids, "score": 8},
@@ -69,6 +76,46 @@ def test_cannot_create_match_with_duplicate_player(client) -> None:
 
     assert response.status_code == 400
     assert "four unique players" in response.json()["detail"]
+
+
+def test_cannot_create_singles_match_with_more_than_one_player_per_side(client) -> None:
+    session = create_session(client)
+    players = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    response = client.post(
+        "/matches",
+        json=match_payload(
+            session["id"],
+            [players[0]["id"], players[1]["id"]],
+            [players[2]["id"]],
+            match_type="singles",
+        ),
+    )
+
+    assert response.status_code == 400
+    assert "exactly one player" in response.json()["detail"]
+
+
+def test_ranked_singles_match_updates_player_ratings_and_creates_rating_events(client) -> None:
+    session = create_session(client)
+    alpha = create_player(client, "Alpha")
+    bravo = create_player(client, "Bravo")
+
+    response = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"]], [bravo["id"]], match_type="singles"),
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["match_type"] == "singles"
+    assert len(body["team_1"]["players"]) == 1
+    assert len(body["team_2"]["players"]) == 1
+    assert len(body["rating_events"]) == 2
+
+    updated_players = {player["display_name"]: player for player in client.get("/players", params={"active_only": "false"}).json()}
+    assert updated_players["Alpha"]["rating"] == 1016.0
+    assert updated_players["Bravo"]["rating"] == 984.0
 
 
 def test_cannot_create_match_with_tied_score(client) -> None:
