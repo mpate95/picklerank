@@ -136,7 +136,7 @@ export default function DashboardPage() {
         />
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <LeaderboardPreview rows={data.leaderboard.slice(0, 8)} />
+        <LeaderboardPreview rows={data.leaderboard} />
         <RecentMatches matches={data.recent_matches} />
       </div>
       <RatingTrendChart trends={data.rating_trends} />
