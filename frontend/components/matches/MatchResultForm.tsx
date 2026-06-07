@@ -18,8 +18,8 @@ export function MatchResultForm() {
   const [isRanked, setIsRanked] = useState(true);
   const [team1Ids, setTeam1Ids] = useState<string[]>([]);
   const [team2Ids, setTeam2Ids] = useState<string[]>([]);
-  const [team1Score, setTeam1Score] = useState(11);
-  const [team2Score, setTeam2Score] = useState(8);
+  const [team1Score, setTeam1Score] = useState("11");
+  const [team2Score, setTeam2Score] = useState("8");
 
   const { data: sessions = [] } = useQuery({
     queryKey: ["sessions"],
@@ -35,8 +35,8 @@ export function MatchResultForm() {
     onSuccess: () => {
       setTeam1Ids([]);
       setTeam2Ids([]);
-      setTeam1Score(11);
-      setTeam2Score(8);
+      setTeam1Score("11");
+      setTeam2Score("8");
       setMatchType("doubles");
       setIsRanked(true);
       void Promise.all([
@@ -52,6 +52,9 @@ export function MatchResultForm() {
   const availablePlayers = useMemo(() => players.filter((player) => player.is_active), [players]);
   const openSessions = useMemo(() => sessions.filter((session) => !session.is_completed), [sessions]);
   const maxPlayersPerTeam = matchType === "singles" ? 1 : 2;
+  const parsedTeam1Score = Number.parseInt(team1Score, 10);
+  const parsedTeam2Score = Number.parseInt(team2Score, 10);
+  const scoresAreValid = Number.isInteger(parsedTeam1Score) && parsedTeam1Score >= 0 && Number.isInteger(parsedTeam2Score) && parsedTeam2Score >= 0;
 
   function selectMatchType(nextMatchType: "singles" | "doubles") {
     setMatchType(nextMatchType);
@@ -78,12 +81,15 @@ export function MatchResultForm() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!scoresAreValid) {
+      return;
+    }
     mutation.mutate({
       session_id: sessionId,
       match_type: matchType,
       is_ranked: isRanked,
-      team_1: { player_ids: team1Ids, score: team1Score },
-      team_2: { player_ids: team2Ids, score: team2Score },
+      team_1: { player_ids: team1Ids, score: parsedTeam1Score },
+      team_2: { player_ids: team2Ids, score: parsedTeam2Score },
     });
   }
 
@@ -187,10 +193,17 @@ export function MatchResultForm() {
           />
         </div>
         {mutation.error ? <p className="text-sm text-coral">{mutation.error.message}</p> : null}
+        {!scoresAreValid ? <p className="text-sm text-coral">Scores must be whole numbers.</p> : null}
         {mutation.isSuccess ? <p className="text-sm text-lime">Match saved. Enter the next one when ready.</p> : null}
         <Button
           type="submit"
-          disabled={mutation.isPending || !sessionId || team1Ids.length !== maxPlayersPerTeam || team2Ids.length !== maxPlayersPerTeam}
+          disabled={
+            mutation.isPending ||
+            !sessionId ||
+            !scoresAreValid ||
+            team1Ids.length !== maxPlayersPerTeam ||
+            team2Ids.length !== maxPlayersPerTeam
+          }
         >
           {mutation.isPending ? "Saving..." : `Save ${isRanked ? "ranked" : "unranked"} match`}
         </Button>

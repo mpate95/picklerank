@@ -11,8 +11,8 @@ type Props = {
   selectedIds: string[];
   onToggle: (playerId: string) => void;
   maxPlayers: number;
-  score: number;
-  onScoreChange: (value: number) => void;
+  score: string;
+  onScoreChange: (value: string) => void;
 };
 
 export function TeamSelector({ title, players, selectedIds, onToggle, maxPlayers, score, onScoreChange }: Props) {
@@ -45,11 +45,11 @@ export function TeamSelector({ title, players, selectedIds, onToggle, maxPlayers
         <Label htmlFor={`${title}-score`}>Score</Label>
         <Input
           id={`${title}-score`}
-          type="number"
-          min={0}
+          type="text"
           inputMode="numeric"
+          pattern="[0-9]*"
           value={score}
-          onChange={(event) => onScoreChange(Number(event.target.value))}
+          onChange={(event) => onScoreChange(event.target.value.replace(/\D/g, ""))}
         />
       </div>
     </div>
