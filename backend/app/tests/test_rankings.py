@@ -13,6 +13,15 @@ def create_session(client) -> dict:
     return response.json()
 
 
+def create_named_session(client, session_date: str, name: str) -> dict:
+    response = client.post(
+        "/sessions",
+        json={"name": name, "session_date": session_date},
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
 def match_payload(session_id: str, team_1_player_ids: list[str], team_2_player_ids: list[str], *, is_ranked: bool = True) -> dict:
     return {
         "session_id": session_id,
@@ -107,3 +116,59 @@ def test_all_rating_history_can_filter_players(client) -> None:
     body = response.json()
     assert [trend["display_name"] for trend in body] == ["Alpha", "Echo"]
     assert all(len(trend["points"]) >= 2 for trend in body)
+
+
+def test_rating_history_aggregates_multiple_ranked_matches_within_a_session(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    first = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert first.status_code == 201
+    second = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert second.status_code == 201
+
+    history_response = client.get(f"/rankings/history/{alpha['id']}")
+    rankings_response = client.get("/rankings/current")
+
+    assert history_response.status_code == 200
+    history = history_response.json()
+    assert len(history) == 2
+    assert history[1]["date"] == "2026-05-30"
+    assert history[1]["rating"] == 1030.53
+    assert history[1]["rating_change"] == 30.53
+
+    assert rankings_response.status_code == 200
+    alpha_row = next(row for row in rankings_response.json() if row["display_name"] == "Alpha")
+    assert alpha_row["rating_change_last_session"] == 30.53
+
+
+def test_rating_history_only_adds_points_for_sessions_a_player_participated_in(client) -> None:
+    first_session = create_named_session(client, "2026-05-30", "Saturday Pickleball - May 30, 2026")
+    second_session = create_named_session(client, "2026-06-06", "Saturday Pickleball - June 6, 2026")
+    alpha, bravo, charlie, delta, echo, foxtrot = [
+        create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"]
+    ]
+
+    first = client.post(
+        "/matches",
+        json=match_payload(first_session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert first.status_code == 201
+    second = client.post(
+        "/matches",
+        json=match_payload(second_session["id"], [echo["id"], foxtrot["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert second.status_code == 201
+
+    response = client.get(f"/rankings/history/{alpha['id']}")
+
+    assert response.status_code == 200
+    history = response.json()
+    assert len(history) == 2
+    assert history[1]["date"] == "2026-05-30"

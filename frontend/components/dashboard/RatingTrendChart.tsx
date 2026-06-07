@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { DashboardSummaryResponse } from "@/lib/types";
-import { formatRating } from "@/lib/formatters";
+import { formatDate, formatRating } from "@/lib/formatters";
 
 import { Card } from "@/components/ui/Card";
 
@@ -19,33 +19,36 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
     });
 
     const labelMap = Object.fromEntries(sortedTrends.map((trend) => [trend.player_id, trend.display_name]));
-    const timeline = Array.from(new Set(sortedTrends.flatMap((trend) => trend.points.map((point) => point.date))))
-      .sort((left, right) => new Date(left).getTime() - new Date(right).getTime());
+    const sessionTimeline = Array.from(
+      new Set(
+        sortedTrends.flatMap((trend) => trend.points.slice(1).map((point) => point.date)),
+      ),
+    ).sort((left, right) => new Date(left).getTime() - new Date(right).getTime());
 
-    const rows = timeline.map((date, index) => {
-      const row: Record<string, number | string> = {
-        date,
-        label: index === 0 ? "Start" : `Match ${index}`,
-      };
+    const rows: Array<Record<string, number | string | null>> = [
+      {
+        key: "start",
+        label: "Start",
+      },
+      ...sessionTimeline.map((date) => ({
+        key: date,
+        label: formatDate(date),
+      })),
+    ];
 
-      for (const trend of sortedTrends) {
-        const currentPoint = trend.points.find((point) => point.date === date);
-        if (currentPoint) {
-          row[trend.player_id] = currentPoint.rating;
-          continue;
-        }
-
-        const previousPoint = [...trend.points]
-          .reverse()
-          .find((point) => new Date(point.date).getTime() <= new Date(date).getTime());
-
-        if (previousPoint) {
-          row[trend.player_id] = previousPoint.rating;
-        }
+    for (const trend of sortedTrends) {
+      const initialPoint = trend.points[0];
+      if (initialPoint) {
+        rows[0][trend.player_id] = initialPoint.rating;
       }
 
-      return row;
-    });
+      for (const point of trend.points.slice(1)) {
+        const row = rows.find((candidate) => candidate.key === point.date);
+        if (row) {
+          row[trend.player_id] = point.rating;
+        }
+      }
+    }
 
     return {
       points: rows,
@@ -70,7 +73,7 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
     <Card>
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-white">Rating Trends</h3>
-        <p className="mt-1 text-sm text-slate-400">Rating movement by match, with all active players shown.</p>
+        <p className="mt-1 text-sm text-slate-400">Rating movement by session, with players only charted when they actually played.</p>
       </div>
       {visibleTrends.length > 0 ? (
         <div className="mb-4 flex flex-wrap gap-2">
@@ -122,6 +125,7 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
                   name={trend.display_name}
                   stroke={palette[index % palette.length]}
                   strokeWidth={2.5}
+                  connectNulls
                   dot={{ r: 2 }}
                   activeDot={{ r: 4 }}
                 />

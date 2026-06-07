@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from datetime import date
 
 from sqlalchemy.orm import Session
 
 from app.core.errors import NotFoundError
 from app.models.match import Match
 from app.models.player import Player
+from app.models.rating_event import RatingEvent
 from app.repositories.match_repository import MatchRepository
 from app.repositories.ranking_repository import RankingRepository
 from app.schemas.ranking import CurrentRankingResponse, PlayerRatingTrendResponse, RatingHistoryPoint
@@ -95,19 +97,12 @@ class RankingService:
         events = self.ranking_repository.list_rating_events_for_player(db, player.id)
         points = [
             RatingHistoryPoint(
-                date=player.created_at,
+                date=player.created_at.date(),
                 rating=1000.0,
                 rating_change=0.0,
             )
         ]
-        points.extend(
-            RatingHistoryPoint(
-                date=event.created_at,
-                rating=float(event.rating_after),
-                rating_change=float(event.rating_change),
-            )
-            for event in events
-        )
+        points.extend(self._session_points_for_events(events))
         return points
 
     @staticmethod
@@ -125,11 +120,14 @@ class RankingService:
         return stats_by_player
 
     def _rating_change_last_session(self, db: Session, player_id: uuid.UUID) -> float:
-        history = self.ranking_repository.list_rating_events_for_player(db, player_id)
-        if not history:
+        player = self.ranking_repository.get_player_with_rating(db, player_id)
+        if player is None:
+            raise NotFoundError("Player", str(player_id))
+        history = self._history_points_for_player(db, player)
+        if len(history) <= 1:
             return 0.0
-        latest_event = history[-1]
-        return float(latest_event.rating_change)
+        latest_point = history[-1]
+        return float(latest_point.rating_change)
 
     @staticmethod
     def _win_percentage(stats: PlayerMatchStats) -> float:
@@ -147,3 +145,39 @@ class RankingService:
             player.display_name.lower(),
             str(player.id),
         )
+
+    @staticmethod
+    def _session_points_for_events(events: list[RatingEvent]) -> list[RatingHistoryPoint]:
+        points: list[RatingHistoryPoint] = []
+        current_session_date: date | None = None
+        current_rating_after = 0.0
+        current_rating_change = 0.0
+
+        for event in events:
+            session_date = event.match.session.session_date
+            if current_session_date is None:
+                current_session_date = session_date
+            elif session_date != current_session_date:
+                points.append(
+                    RatingHistoryPoint(
+                        date=current_session_date,
+                        rating=current_rating_after,
+                        rating_change=current_rating_change,
+                    )
+                )
+                current_session_date = session_date
+                current_rating_change = 0.0
+
+            current_rating_after = float(event.rating_after)
+            current_rating_change += float(event.rating_change)
+
+        if current_session_date is not None:
+            points.append(
+                RatingHistoryPoint(
+                    date=current_session_date,
+                    rating=current_rating_after,
+                    rating_change=current_rating_change,
+                )
+            )
+
+        return points

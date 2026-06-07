@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class CurrentRankingResponse(BaseModel):
 
 
 class RatingHistoryPoint(BaseModel):
-    date: datetime
+    date: date
     rating: float
     rating_change: float
 
