@@ -9,6 +9,7 @@ import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
 import { LeaderboardPreview } from "@/components/dashboard/LeaderboardPreview";
 import { RatingTrendChart } from "@/components/dashboard/RatingTrendChart";
 import { RecentMatches } from "@/components/dashboard/RecentMatches";
+import { TeamPerformanceTable } from "@/components/dashboard/TeamPerformanceTable";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 function joinNames(rows: Array<{ display_name: string }>) {
@@ -82,17 +83,31 @@ export default function DashboardPage() {
     queryKey: ["stats", "players"],
     queryFn: api.getPlayerStats,
   });
+  const teamStatsQuery = useQuery({
+    queryKey: ["stats", "teams"],
+    queryFn: api.getTeamStats,
+  });
 
-  if (isLoading || rankingsQuery.isLoading || statsQuery.isLoading) {
+  if (isLoading || rankingsQuery.isLoading || statsQuery.isLoading || teamStatsQuery.isLoading) {
     return <div className="text-sm text-slate-400">Loading dashboard...</div>;
   }
 
-  if (error || rankingsQuery.error || statsQuery.error || !data || !rankingsQuery.data || !statsQuery.data) {
+  if (
+    error ||
+    rankingsQuery.error ||
+    statsQuery.error ||
+    teamStatsQuery.error ||
+    !data ||
+    !rankingsQuery.data ||
+    !statsQuery.data ||
+    !teamStatsQuery.data
+  ) {
     return <div className="text-sm text-coral">{error instanceof Error ? error.message : "Failed to load dashboard."}</div>;
   }
 
   const rankings = rankingsQuery.data;
   const stats = statsQuery.data;
+  const teams = teamStatsQuery.data;
   const kings = topRatedRows(rankings);
   const bestWinRates = bestWinRateRows(rankings);
   const hottestStreaks = hottestStreakRows(stats);
@@ -137,6 +152,7 @@ export default function DashboardPage() {
         <LeaderboardPreview rows={data.leaderboard} />
         <RecentMatches matches={data.recent_matches} />
       </div>
+      <TeamPerformanceTable teams={teams} />
       <RatingTrendChart trends={data.rating_trends} />
     </div>
   );
