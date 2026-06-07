@@ -1,7 +1,7 @@
 services:
   - type: web
     name: picklerank-api
-    plan: free
+    plan: starter
     runtime: python
     rootDir: backend
     buildCommand: pip install -e ".[dev]"
