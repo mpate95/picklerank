@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import { formatPercent, formatRating, formatSigned } from "@/lib/formatters";
-import { CurrentRankingResponse, PlayerStatsResponse } from "@/lib/types";
+import { CurrentRankingResponse, DashboardSummaryResponse, PlayerStatsResponse } from "@/lib/types";
 import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
 import { LeaderboardPreview } from "@/components/dashboard/LeaderboardPreview";
 import { RatingTrendChart } from "@/components/dashboard/RatingTrendChart";
@@ -21,14 +21,6 @@ function topRatedRows(rows: CurrentRankingResponse[]) {
   }
   const topRating = rows[0].rating;
   return rows.filter((row) => row.rating === topRating);
-}
-
-function biggestMoverRows(rows: CurrentRankingResponse[]) {
-  const maxDelta = Math.max(...rows.map((row) => Math.abs(row.rating_change_last_session)), 0);
-  if (maxDelta === 0) {
-    return [];
-  }
-  return rows.filter((row) => Math.abs(row.rating_change_last_session) === maxDelta);
 }
 
 function bestWinRateRows(rows: CurrentRankingResponse[]) {
@@ -70,6 +62,13 @@ function hottestStreakRows(rows: PlayerStatsResponse[]) {
   return eligible.filter((row) => parseStreak(row.current_streak).count === maxStreak);
 }
 
+function lastSessionMvpDetail(mvp: DashboardSummaryResponse["last_session_mvp"]) {
+  if (!mvp) {
+    return undefined;
+  }
+  return `${formatSigned(mvp.point_differential)} point diff last session`;
+}
+
 export default function DashboardPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard", "summary"],
@@ -95,7 +94,6 @@ export default function DashboardPage() {
   const rankings = rankingsQuery.data;
   const stats = statsQuery.data;
   const kings = topRatedRows(rankings);
-  const movers = biggestMoverRows(rankings);
   const bestWinRates = bestWinRateRows(rankings);
   const hottestStreaks = hottestStreakRows(stats);
 
@@ -114,10 +112,10 @@ export default function DashboardPage() {
           accent="bg-lime"
         />
         <DashboardStatCard
-          eyebrow={movers.length > 1 ? "Biggest movers" : "Biggest mover"}
-          title={movers.length > 0 ? joinNames(movers) : "No movement yet"}
-          detail={movers.length > 1 ? "Multiple players moved the same amount." : undefined}
-          value={movers.length > 0 ? formatSigned(movers[0].rating_change_last_session) : "—"}
+          eyebrow="Last session MVP"
+          title={data.last_session_mvp ? data.last_session_mvp.display_name : "No session yet"}
+          detail={lastSessionMvpDetail(data.last_session_mvp)}
+          value={data.last_session_mvp ? `${data.last_session_mvp.wins}-${data.last_session_mvp.losses}` : "—"}
           accent="bg-cyan"
         />
         <DashboardStatCard

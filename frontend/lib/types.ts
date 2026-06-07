@@ -146,7 +146,13 @@ export type TeamStatsResponse = {
 
 export type DashboardSummaryResponse = {
   top_player: { player_id: string; display_name: string; rating: number } | null;
-  biggest_mover: { player_id: string; display_name: string; rating_change: number } | null;
+  last_session_mvp: {
+    player_id: string;
+    display_name: string;
+    wins: number;
+    losses: number;
+    point_differential: number;
+  } | null;
   best_win_percentage: { player_id: string; display_name: string; win_percentage: number; games_played: number } | null;
   most_games_played: { player_id: string; display_name: string; games_played: number } | null;
   leaderboard: Array<{

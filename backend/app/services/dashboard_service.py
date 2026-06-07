@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from app.repositories.match_repository import MatchRepository
 from app.schemas.dashboard import (
     DashboardBestWinPercentageResponse,
-    DashboardBiggestMoverResponse,
     DashboardLeaderboardEntry,
+    DashboardLastSessionMvpResponse,
     DashboardMostGamesPlayedResponse,
     DashboardRatingTrendResponse,
     DashboardRecentMatchResponse,
@@ -31,7 +31,8 @@ class DashboardService:
     def get_summary(self, db: Session) -> DashboardSummaryResponse:
         rankings = self.ranking_service.get_current_rankings(db)
         player_stats = self.stats_service.get_player_stats(db)
-        recent_matches = self.match_repository.list_matches(db, include_voided=False)[:10]
+        all_matches = self.match_repository.list_matches(db, include_voided=False)
+        recent_matches = all_matches[:10]
         rating_trends = self.ranking_service.get_all_rating_history(db)
 
         top_player = None
@@ -43,15 +44,7 @@ class DashboardService:
                 rating=first.rating,
             )
 
-        biggest_mover = None
-        ranked_movers = [row for row in rankings if row.rating_change_last_session != 0]
-        if ranked_movers:
-            mover = max(ranked_movers, key=lambda row: (abs(row.rating_change_last_session), row.display_name.lower()))
-            biggest_mover = DashboardBiggestMoverResponse(
-                player_id=mover.player_id,
-                display_name=mover.display_name,
-                rating_change=mover.rating_change_last_session,
-            )
+        last_session_mvp = self._last_session_mvp(all_matches)
 
         best_win_percentage = None
         eligible_stats = [row for row in player_stats if row.games_played > 0]
@@ -75,7 +68,7 @@ class DashboardService:
 
         return DashboardSummaryResponse(
             top_player=top_player,
-            biggest_mover=biggest_mover,
+            last_session_mvp=last_session_mvp,
             best_win_percentage=best_win_percentage,
             most_games_played=most_games_played,
             leaderboard=[
@@ -99,6 +92,55 @@ class DashboardService:
                 )
                 for trend in rating_trends
             ],
+        )
+
+    @staticmethod
+    def _last_session_mvp(matches):
+        if not matches:
+            return None
+
+        latest_session_date = max(match.session.session_date for match in matches)
+        latest_session_matches = [match for match in matches if match.session.session_date == latest_session_date]
+        stats_by_player: dict = {}
+
+        for match in latest_session_matches:
+            teams_by_number = {team.team_number: team for team in match.teams}
+            for team in match.teams:
+                opponent_team = teams_by_number[1 if team.team_number == 2 else 2]
+                for team_player in team.team_players:
+                    entry = stats_by_player.setdefault(
+                        team_player.player_id,
+                        {
+                            "display_name": team_player.player.display_name,
+                            "wins": 0,
+                            "losses": 0,
+                            "point_differential": 0,
+                        },
+                    )
+                    entry["point_differential"] += team.score - opponent_team.score
+                    if team.is_winner:
+                        entry["wins"] += 1
+                    else:
+                        entry["losses"] += 1
+
+        if not stats_by_player:
+            return None
+
+        player_id, stats = max(
+            stats_by_player.items(),
+            key=lambda item: (
+                item[1]["wins"] - item[1]["losses"],
+                item[1]["wins"],
+                item[1]["point_differential"],
+                item[1]["display_name"].lower(),
+            ),
+        )
+        return DashboardLastSessionMvpResponse(
+            player_id=player_id,
+            display_name=stats["display_name"],
+            wins=stats["wins"],
+            losses=stats["losses"],
+            point_differential=stats["point_differential"],
         )
 
     @staticmethod

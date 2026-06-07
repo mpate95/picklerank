@@ -12,10 +12,12 @@ class DashboardTopPlayerResponse(BaseModel):
     rating: float
 
 
-class DashboardBiggestMoverResponse(BaseModel):
+class DashboardLastSessionMvpResponse(BaseModel):
     player_id: uuid.UUID
     display_name: str
-    rating_change: float
+    wins: int
+    losses: int
+    point_differential: int
 
 
 class DashboardBestWinPercentageResponse(BaseModel):
@@ -59,7 +61,7 @@ class DashboardRatingTrendResponse(BaseModel):
 
 class DashboardSummaryResponse(BaseModel):
     top_player: DashboardTopPlayerResponse | None
-    biggest_mover: DashboardBiggestMoverResponse | None
+    last_session_mvp: DashboardLastSessionMvpResponse | None
     best_win_percentage: DashboardBestWinPercentageResponse | None
     most_games_played: DashboardMostGamesPlayedResponse | None
     leaderboard: list[DashboardLeaderboardEntry]

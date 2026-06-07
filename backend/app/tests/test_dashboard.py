@@ -52,7 +52,10 @@ def test_dashboard_summary_returns_composed_view(client) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["top_player"]["display_name"] == "Echo"
-    assert body["biggest_mover"]["display_name"] in {"Echo", "Foxtrot"}
+    assert body["last_session_mvp"]["display_name"] in {"Echo", "Foxtrot"}
+    assert body["last_session_mvp"]["wins"] == 1
+    assert body["last_session_mvp"]["losses"] == 0
+    assert body["last_session_mvp"]["point_differential"] == 2
     assert body["best_win_percentage"]["games_played"] >= 1
     assert body["most_games_played"]["display_name"] in {"Alpha", "Bravo"}
     assert len(body["leaderboard"]) == 6
@@ -68,7 +71,7 @@ def test_dashboard_summary_handles_empty_state(client) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["top_player"] is None
-    assert body["biggest_mover"] is None
+    assert body["last_session_mvp"] is None
     assert body["best_win_percentage"] is None
     assert body["most_games_played"] is None
     assert body["leaderboard"] == []
