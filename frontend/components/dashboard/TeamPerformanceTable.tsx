@@ -6,10 +6,16 @@ import { TeamStatsResponse } from "@/lib/types";
 import { formatPercent } from "@/lib/formatters";
 
 import { Card } from "@/components/ui/Card";
-import { cn } from "@/components/ui/utils";
 
 type SortKey = "default" | "record" | "winPercentage" | "streak";
 type SortDirection = "desc" | "asc";
+
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: "default", label: "Rank" },
+  { value: "record", label: "Record" },
+  { value: "winPercentage", label: "Win %" },
+  { value: "streak", label: "Streak" },
+];
 
 function parseStreakValue(streak: string | undefined) {
   if (!streak || streak === "-") {
@@ -68,51 +74,44 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
 
     return sortDirection === "desc" ? result : -result;
   });
-
-  function headerButton(label: string, key: Exclude<SortKey, "default">) {
-    const isActive = sortKey === key;
-    const indicator = isActive ? (sortDirection === "desc" ? "↓" : "↑") : "↕";
-
-    function handleClick() {
-      if (isActive) {
-        setSortDirection((current) => (current === "desc" ? "asc" : "desc"));
-        return;
-      }
-      setSortKey(key);
-      setSortDirection("desc");
-    }
-
-    return (
-      <button
-        type="button"
-        onClick={handleClick}
-        className={cn(
-          "inline-flex min-h-8 items-center gap-1 py-1 font-medium whitespace-nowrap transition hover:text-white",
-          isActive && "font-semibold text-white underline decoration-cyan/60 underline-offset-4",
-        )}
-        aria-pressed={isActive}
-      >
-        {label}
-        <span className={cn("text-xs text-slate-500 transition", isActive && "text-cyan", !isActive && "opacity-80")}>{indicator}</span>
-      </button>
-    );
-  }
-
   return (
-    <Card>
+    <Card className="h-full p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">Team Rankings</h3>
-          <p className="mt-1 text-sm text-slate-400">Doubles pairings ranked by wins, win rate, volume, and current streak.</p>
+          <h3 className="text-xl font-semibold text-white">Team Rankings</h3>
+          <p className="mt-1 text-base text-slate-400">Doubles pairings ranked by wins, win rate, volume, and current streak.</p>
         </div>
-        <div className="flex items-center gap-2 self-start">
+        <div className="flex flex-wrap items-center gap-2 self-start">
+          <label className="text-sm font-medium text-slate-300" htmlFor="team-rankings-sort">
+            Sort by
+          </label>
+          <select
+            id="team-rankings-sort"
+            value={sortKey}
+            onChange={(event) => setSortKey(event.target.value as SortKey)}
+            className="rounded-full border border-line bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sortDirection}
+            onChange={(event) => setSortDirection(event.target.value as SortDirection)}
+            className="rounded-full border border-line bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan"
+          >
+            <option value="desc">High to low</option>
+            <option value="asc">Low to high</option>
+          </select>
           <button
             type="button"
             onClick={() => {
               setSortKey("default");
               setSortDirection("desc");
             }}
-            className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
           >
             Reset sort
           </button>
@@ -122,14 +121,14 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
         <p className="text-sm text-slate-400">No doubles team history yet.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-[40rem] text-left text-[15px]">
             <thead className="text-slate-400">
               <tr>
                 <th className="pb-3 pr-4 whitespace-nowrap">Rank</th>
                 <th className="pb-3 pr-4 whitespace-nowrap">Team</th>
-                <th className="pb-3 pr-4 whitespace-nowrap">{headerButton("Record", "record")}</th>
-                <th className="pb-3 pr-4 whitespace-nowrap">{headerButton("Win %", "winPercentage")}</th>
-                <th className="pb-3 whitespace-nowrap">{headerButton("Streak", "streak")}</th>
+                <th className="pb-3 pr-4 whitespace-nowrap">Record</th>
+                <th className="pb-3 pr-4 whitespace-nowrap">Win %</th>
+                <th className="pb-3 whitespace-nowrap">Streak</th>
               </tr>
             </thead>
             <tbody>
