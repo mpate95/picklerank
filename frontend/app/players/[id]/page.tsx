@@ -1,9 +1,8 @@
 "use client";
 
-import { use } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Pencil, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import { formatDate, formatPercent, formatRating } from "@/lib/formatters";
@@ -53,6 +52,10 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
     },
   });
 
+  useEffect(() => {
+    setDraftName(playerQuery.data?.display_name ?? "");
+  }, [playerQuery.data?.display_name]);
+
   if (playerQuery.isLoading || statsQuery.isLoading) {
     return <div className="text-sm text-slate-400">Loading player profile...</div>;
   }
@@ -63,10 +66,6 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
   const player = playerQuery.data;
   const stats = statsQuery.data;
-
-  useEffect(() => {
-    setDraftName(player.display_name);
-  }, [player.display_name]);
 
   const trimmedDraftName = draftName.trim();
   const canSaveName = trimmedDraftName.length > 0 && trimmedDraftName !== player.display_name;
