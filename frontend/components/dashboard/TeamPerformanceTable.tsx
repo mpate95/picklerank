@@ -9,6 +9,16 @@ import { Card } from "@/components/ui/Card";
 
 type SortOption = "default" | "record_desc" | "record_asc" | "win_desc" | "win_asc" | "streak_desc" | "streak_asc";
 
+const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
+  { value: "default", label: "Default" },
+  { value: "record_desc", label: "Record most wins" },
+  { value: "record_asc", label: "Record fewest wins" },
+  { value: "win_desc", label: "Win percent high to low" },
+  { value: "win_asc", label: "Win percent low to high" },
+  { value: "streak_desc", label: "Streak best first" },
+  { value: "streak_asc", label: "Streak worst first" },
+];
+
 function parseStreakValue(streak: string | undefined) {
   if (!streak || streak === "-") {
     return 0;
@@ -80,7 +90,7 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
           <h3 className="text-lg font-semibold text-white">Team Rankings</h3>
           <p className="mt-1 text-sm text-slate-400">Doubles pairings ranked by wins, win rate, volume, and current streak.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <label htmlFor="team-rankings-sort" className="text-sm text-slate-400">
             Sort
           </label>
@@ -88,23 +98,51 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
             id="team-rankings-sort"
             value={sortOption}
             onChange={(event) => setSortOption(event.target.value as SortOption)}
-            className="rounded-full border border-line bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan"
+            className="min-w-0 flex-1 rounded-full border border-line bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan sm:w-auto sm:flex-none"
           >
-            <option value="default">Default rank</option>
-            <option value="record_desc">Record: most wins</option>
-            <option value="record_asc">Record: fewest wins</option>
-            <option value="win_desc">Win %: high to low</option>
-            <option value="win_asc">Win %: low to high</option>
-            <option value="streak_desc">Streak: best first</option>
-            <option value="streak_asc">Streak: worst first</option>
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
       {sortedTeams.length === 0 ? (
         <p className="text-sm text-slate-400">No doubles team history yet.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-[34rem] text-left text-sm">
+        <>
+          <div className="space-y-3 md:hidden">
+            {sortedTeams.map((team, index) => (
+              <div key={`${team.player_1_id}-${team.player_2_id}`} className="rounded-2xl border border-white/5 bg-slate-950/35 p-4">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Rank #{index + 1}</div>
+                    <div className="mt-1 text-sm font-medium text-white">
+                      {team.player_1_name} / {team.player_2_name}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">{team.games_played} matches</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs uppercase tracking-[0.15em] text-slate-500">Streak</div>
+                    <div className="mt-1 text-sm text-slate-300">{team.current_streak}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.15em] text-slate-500">Record</div>
+                    <div className="mt-1 text-slate-300">{team.wins}-{team.losses}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.15em] text-slate-500">Win %</div>
+                    <div className="mt-1 text-slate-300">{formatPercent(team.win_percentage)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
+          <table className="min-w-full text-left text-sm">
             <thead className="text-slate-400">
               <tr>
                 <th className="pb-3">Rank</th>
@@ -133,7 +171,8 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </Card>
   );
