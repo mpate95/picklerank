@@ -71,12 +71,12 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
 
   return (
     <Card>
-      <div className="mb-4">
+      <div className="mb-5">
         <h3 className="text-lg font-semibold text-white">Rating Trends</h3>
         <p className="mt-1 text-sm text-slate-400">Rating movement by session, with players only charted when they actually played.</p>
       </div>
       {visibleTrends.length > 0 ? (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-5 flex flex-wrap gap-2">
           {sortedTrends.map((trend, index) => {
             const isActive = activePlayerIds.includes(trend.player_id);
             return (

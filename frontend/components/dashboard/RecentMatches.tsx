@@ -7,8 +7,11 @@ import { Card } from "@/components/ui/Card";
 export function RecentMatches({ matches }: { matches: DashboardSummaryResponse["recent_matches"] }) {
   return (
     <Card>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Recent Matches</h3>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-white">Recent Matches</h3>
+          <p className="mt-1 text-sm text-slate-400">Latest recorded results across recent sessions.</p>
+        </div>
         <Badge>{matches.length} logged</Badge>
       </div>
       <div className="space-y-3">

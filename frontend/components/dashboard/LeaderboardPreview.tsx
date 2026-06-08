@@ -12,14 +12,6 @@ import { cn } from "@/components/ui/utils";
 type SortKey = "default" | "rating" | "streak" | "record" | "winPercentage";
 type SortDirection = "desc" | "asc";
 
-const SORT_LABELS: Record<SortKey, string> = {
-  default: "Rank",
-  rating: "Rating",
-  streak: "Streak",
-  record: "Record",
-  winPercentage: "Win %",
-};
-
 function parseStreakValue(streak: string | undefined) {
   if (!streak || streak === "-") {
     return 0;
@@ -45,8 +37,6 @@ export function LeaderboardPreview({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("default");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const sortSummary =
-    sortKey === "default" ? "Default ranking" : `${SORT_LABELS[sortKey]} ${sortDirection === "desc" ? "high to low" : "low to high"}`;
 
   const sortedRows = [...rows].sort((left, right) => {
     let result = 0;
@@ -90,8 +80,8 @@ export function LeaderboardPreview({
         type="button"
         onClick={handleClick}
         className={cn(
-          "inline-flex min-h-9 items-center gap-1 rounded-md px-1 font-medium transition hover:text-white",
-          isActive && "bg-white/5 font-semibold text-white underline decoration-cyan/60 underline-offset-4",
+          "inline-flex min-h-8 items-center gap-1 py-1 font-medium whitespace-nowrap transition hover:text-white",
+          isActive && "font-semibold text-white underline decoration-cyan/60 underline-offset-4",
         )}
         aria-pressed={isActive}
       >
@@ -103,22 +93,19 @@ export function LeaderboardPreview({
 
   return (
     <Card>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-white">Leaderboard</h3>
-          <p className="mt-1 text-xs text-slate-400">Tap any highlighted stat header to sort. Tap again to reverse.</p>
+          <p className="mt-1 text-sm text-slate-400">Current player ratings and records. Tap column labels to sort.</p>
         </div>
         <div className="flex items-center gap-2 self-start">
-          <span className="rounded-full border border-cyan/20 bg-cyan/10 px-2.5 py-1 text-[11px] font-medium text-cyan">
-            {sortSummary}
-          </span>
           <button
             type="button"
             onClick={() => {
               setSortKey("default");
               setSortDirection("desc");
             }}
-            className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
           >
             Reset sort
           </button>
@@ -128,19 +115,19 @@ export function LeaderboardPreview({
         <table className="min-w-full text-left text-sm">
           <thead className="text-slate-400">
             <tr>
-              <th className="pb-3">Rank</th>
-              <th className="pb-3">Player</th>
-              <th className="pb-3">{headerButton("Rating", "rating")}</th>
-              <th className="pb-3">{headerButton("Streak", "streak")}</th>
-              <th className="pb-3">{headerButton("Record", "record")}</th>
-              <th className="pb-3">{headerButton("Win %", "winPercentage")}</th>
+              <th className="pb-3 pr-4 whitespace-nowrap">Rank</th>
+              <th className="pb-3 pr-4 whitespace-nowrap">Player</th>
+              <th className="pb-3 pr-4 whitespace-nowrap">{headerButton("Rating", "rating")}</th>
+              <th className="pb-3 pr-4 whitespace-nowrap">{headerButton("Streak", "streak")}</th>
+              <th className="pb-3 pr-4 whitespace-nowrap">{headerButton("Record", "record")}</th>
+              <th className="pb-3 whitespace-nowrap">{headerButton("Win %", "winPercentage")}</th>
             </tr>
           </thead>
           <tbody>
             {sortedRows.map((row) => (
               <tr key={row.player_id} className="border-t border-white/5">
-                <td className="py-3 text-white">{row.rank}</td>
-                <td className="py-3">
+                <td className="py-3 pr-4 whitespace-nowrap text-white">{row.rank}</td>
+                <td className="py-3 pr-4 whitespace-nowrap">
                   <Link
                     href={`/players/${row.player_id}`}
                     className="font-medium text-cyan underline decoration-cyan/40 underline-offset-4 transition hover:text-white hover:decoration-white"
@@ -148,10 +135,10 @@ export function LeaderboardPreview({
                     {row.display_name}
                   </Link>
                 </td>
-                <td className="py-3 text-white">{formatRating(row.rating)}</td>
-                <td className="py-3 text-slate-400">{streakByPlayerId[row.player_id] ?? "—"}</td>
-                <td className="py-3 text-slate-300">{row.wins}-{row.losses}</td>
-                <td className="py-3 text-slate-300">{formatPercent(row.win_percentage)}</td>
+                <td className="py-3 pr-4 whitespace-nowrap text-white">{formatRating(row.rating)}</td>
+                <td className="py-3 pr-4 whitespace-nowrap text-slate-400">{streakByPlayerId[row.player_id] ?? "—"}</td>
+                <td className="py-3 pr-4 whitespace-nowrap text-slate-300">{row.wins}-{row.losses}</td>
+                <td className="py-3 whitespace-nowrap text-slate-300">{formatPercent(row.win_percentage)}</td>
               </tr>
             ))}
           </tbody>
