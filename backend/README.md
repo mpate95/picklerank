@@ -15,6 +15,40 @@ Initial FastAPI backend scaffold for PickleRank. This Phase 0 setup includes:
 
 ## Local setup
 
+### Full stack with Docker Compose
+
+From the repository root:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- Postgres on `localhost:5432`
+- FastAPI on `localhost:8000`
+- Next.js on `localhost:3000`
+
+The backend runs `alembic upgrade head` on startup, and both app containers mount your local source tree so code changes reload automatically.
+
+Default local admin credentials:
+
+- username: `admin`
+- password: `changeme-admin-password`
+
+Useful commands:
+
+```bash
+docker compose down
+docker compose down -v
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+Use `docker compose down -v` when you want a clean short-lived environment with a fresh database.
+
+### Backend-only local setup
+
 1. Create a virtual environment and install dependencies:
 
 ```bash
@@ -50,6 +84,19 @@ uvicorn app.main:app --reload
 ```
 
 The API will be available at `http://127.0.0.1:8000` and the health check at `http://127.0.0.1:8000/health`.
+
+### Frontend outside Docker
+
+If you want to run the frontend on your host machine while keeping Postgres and the API in Docker:
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+npm install
+npm run dev
+```
+
+The frontend proxy will forward `/api/*` requests to the backend URL in `API_BASE_URL`.
 
 ## Implemented endpoints
 
