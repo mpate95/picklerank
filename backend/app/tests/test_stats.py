@@ -157,6 +157,38 @@ def test_team_stats_aggregate_pairings(client) -> None:
     assert alpha_bravo["losses"] == 0
     assert alpha_bravo["win_percentage"] == 1.0
     assert alpha_bravo["point_differential"] == 7
+    assert alpha_bravo["current_streak"] == "W2"
+
+
+def test_team_stats_include_current_streak(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]], team_1_score=11, team_2_score=8),
+    )
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [charlie["id"], delta["id"]], [alpha["id"], bravo["id"]], team_1_score=11, team_2_score=9),
+    )
+
+    response = client.get("/stats/teams")
+
+    assert response.status_code == 200
+    body = response.json()
+    alpha_bravo = next(
+        row
+        for row in body
+        if {row["player_1_name"], row["player_2_name"]} == {"Alpha", "Bravo"}
+    )
+    charlie_delta = next(
+        row
+        for row in body
+        if {row["player_1_name"], row["player_2_name"]} == {"Charlie", "Delta"}
+    )
+    assert alpha_bravo["current_streak"] == "L1"
+    assert charlie_delta["current_streak"] == "W1"
 
 
 def test_voided_matches_do_not_count_toward_stats(client) -> None:

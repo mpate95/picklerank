@@ -47,3 +47,4 @@ class TeamStatsResponse(BaseModel):
     losses: int
     win_percentage: float
     point_differential: int
+    current_streak: str

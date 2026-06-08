@@ -142,6 +142,7 @@ export type TeamStatsResponse = {
   losses: number;
   win_percentage: number;
   point_differential: number;
+  current_streak: string;
 };
 
 export type DashboardSummaryResponse = {

@@ -43,6 +43,11 @@ class AggregatedTeamStats:
     wins: int = 0
     losses: int = 0
     point_differential: int = 0
+    results_desc: list[str] | None = None
+
+    def __post_init__(self) -> None:
+        if self.results_desc is None:
+            self.results_desc = []
 
 
 class StatsService:
@@ -100,6 +105,7 @@ class StatsService:
                 losses=stats.losses,
                 win_percentage=self._win_percentage(stats.wins, stats.games_played),
                 point_differential=stats.point_differential,
+                current_streak=self._current_streak(stats.results_desc),
             )
             for stats in sorted(
                 stats_by_team.values(),
@@ -150,6 +156,7 @@ class StatsService:
                 )
                 team_stats.games_played += 1
                 team_stats.point_differential += team.score - opponent_team.score
+                team_stats.results_desc.append("W" if team.is_winner else "L")
                 if team.is_winner:
                     team_stats.wins += 1
                 else:
