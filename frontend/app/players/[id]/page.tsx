@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { formatDate, formatPercent, formatRating } from "@/lib/formatters";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { PlayerCard } from "@/components/players/PlayerCard";
+import { PlayerRatingTrendCard } from "@/components/players/PlayerRatingTrendCard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -147,6 +148,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
           ) : null
         }
       />
+      <PlayerRatingTrendCard playerName={player.display_name} history={stats.rating_history} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h3 className="mb-4 text-lg font-semibold text-white">Recent Form</h3>
