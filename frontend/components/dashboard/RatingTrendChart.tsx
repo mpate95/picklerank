@@ -81,20 +81,20 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
             const isActive = activePlayerIds.includes(trend.player_id);
             return (
               <button
-              key={trend.player_id}
-              type="button"
-              onClick={() => toggleTrend(trend.player_id)}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition ${
-                isActive
-                  ? "border-white/12 bg-slate-950/45 text-slate-100"
-                  : "border-white/6 bg-slate-950/15 text-slate-500"
-              }`}
-            >
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: palette[index % palette.length] }}
-              />
-              <span>{trend.display_name}</span>
+                key={trend.player_id}
+                type="button"
+                onClick={() => toggleTrend(trend.player_id)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition ${
+                  isActive
+                    ? "border-white/12 bg-slate-950/45 text-slate-100"
+                    : "border-white/6 bg-slate-950/15 text-slate-500"
+                }`}
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: palette[index % palette.length] }}
+                />
+                <span>{trend.display_name}</span>
               </button>
             );
           })}
