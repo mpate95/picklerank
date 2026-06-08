@@ -1,36 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { api } from "@/lib/api";
 import { formatRating } from "@/lib/formatters";
-import { PlayerResponse } from "@/lib/types";
+import { PlayerResponse, PlayerStatsResponse } from "@/lib/types";
 
-import { useAuth } from "@/components/auth/AuthProvider";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 export function PlayerTable({
   players,
-  onEdit,
+  statsByPlayerId,
 }: {
   players: PlayerResponse[];
-  onEdit?: (player: PlayerResponse) => void;
+  statsByPlayerId: Record<string, PlayerStatsResponse | undefined>;
 }) {
-  const { isAdmin } = useAuth();
-  const queryClient = useQueryClient();
-  const deactivateMutation = useMutation({
-    mutationFn: api.deactivatePlayer,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["players"] });
-      void queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["rankings", "current"] });
-      void queryClient.invalidateQueries({ queryKey: ["player"] });
-    },
-  });
-
   return (
     <Card>
       <div className="overflow-x-auto">
@@ -39,48 +22,25 @@ export function PlayerTable({
             <tr>
               <th className="pb-3">Player</th>
               <th className="pb-3">Rating</th>
-              <th className="pb-3">Status</th>
-              <th className="pb-3">Profile</th>
-              {isAdmin ? <th className="pb-3">Actions</th> : null}
+              <th className="pb-3">Record</th>
             </tr>
           </thead>
           <tbody>
-            {players.map((player) => (
-              <tr key={player.id} className="border-t border-white/5">
-                <td className="py-3 font-medium text-white">{player.display_name}</td>
-                <td className="py-3 text-slate-200">{formatRating(player.rating)}</td>
-                <td className="py-3">
-                  <Badge className={player.is_active ? "text-lime" : "text-coral"}>{player.is_active ? "Active" : "Inactive"}</Badge>
-                </td>
-                <td className="py-3">
-                  <Link href={`/players/${player.id}`} className="text-cyan hover:text-white">
-                    View
-                  </Link>
-                </td>
-                {isAdmin ? (
-                  <td className="py-3">
-                    <div className="flex items-center gap-3">
-                      <Button variant="ghost" className="px-0 hover:bg-transparent hover:text-white" onClick={() => onEdit?.(player)}>
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="px-0 text-coral hover:bg-transparent hover:text-white"
-                        disabled={!player.is_active || deactivateMutation.isPending}
-                        onClick={() => {
-                          if (!window.confirm(`Deactivate ${player.display_name}? They will remain in historical results.`)) {
-                            return;
-                          }
-                          deactivateMutation.mutate(player.id);
-                        }}
-                      >
-                        Deactivate
-                      </Button>
-                    </div>
+            {players.map((player) => {
+              const stats = statsByPlayerId[player.id];
+
+              return (
+                <tr key={player.id} className="border-t border-white/5">
+                  <td className="py-3 font-medium">
+                    <Link href={`/players/${player.id}`} className="text-white transition hover:text-cyan">
+                      {player.display_name}
+                    </Link>
                   </td>
-                ) : null}
-              </tr>
-            ))}
+                  <td className="py-3 text-slate-200">{formatRating(player.rating)}</td>
+                  <td className="py-3 text-slate-300">{stats ? `${stats.wins}-${stats.losses}` : "—"}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
