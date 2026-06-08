@@ -148,15 +148,13 @@ export default function DashboardPage() {
           accent="bg-white"
         />
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="xl:row-span-2">
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-start">
+        <div className="grid gap-6">
           <LeaderboardPreview rows={data.leaderboard} />
+          <TeamPerformanceTable teams={teams} />
         </div>
         <div className="order-3 xl:order-2">
           <RecentMatches matches={data.recent_matches} />
-        </div>
-        <div className="order-2 xl:order-3">
-          <TeamPerformanceTable teams={teams} />
         </div>
       </div>
       <RatingTrendChart trends={data.rating_trends} />
