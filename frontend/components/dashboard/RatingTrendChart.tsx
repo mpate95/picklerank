@@ -70,13 +70,13 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
   }
 
   return (
-    <Card className="p-6">
-      <div className="mb-5">
-        <h3 className="text-xl font-semibold text-white">Rating Trends</h3>
-        <p className="mt-1 text-base text-slate-400">Rating movement by session, with players only charted when they actually played.</p>
+    <Card>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-white">Rating Trends</h3>
+        <p className="mt-1 text-sm text-slate-400">Rating movement by session, with players only charted when they actually played.</p>
       </div>
       {visibleTrends.length > 0 ? (
-        <div className="mb-5 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {sortedTrends.map((trend, index) => {
             const isActive = activePlayerIds.includes(trend.player_id);
             return (
@@ -84,7 +84,7 @@ export function RatingTrendChart({ trends }: { trends: DashboardSummaryResponse[
               key={trend.player_id}
               type="button"
               onClick={() => toggleTrend(trend.player_id)}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition ${
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition ${
                 isActive
                   ? "border-white/12 bg-slate-950/45 text-slate-100"
                   : "border-white/6 bg-slate-950/15 text-slate-500"

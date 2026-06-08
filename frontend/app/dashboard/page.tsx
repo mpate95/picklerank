@@ -149,13 +149,13 @@ export default function DashboardPage() {
           accent="bg-white"
         />
       </div>
-      <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-start">
         <div className="grid gap-6">
           <LeaderboardPreview rows={data.leaderboard} streakByPlayerId={streakByPlayerId} />
-        </div>
-        <div className="grid gap-6">
-          <RecentMatches matches={data.recent_matches} />
           <TeamPerformanceTable teams={teams} />
+        </div>
+        <div className="order-3 xl:order-2">
+          <RecentMatches matches={data.recent_matches} />
         </div>
       </div>
       <RatingTrendChart trends={data.rating_trends} />
