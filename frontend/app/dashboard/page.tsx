@@ -108,6 +108,7 @@ export default function DashboardPage() {
   const rankings = rankingsQuery.data;
   const stats = statsQuery.data;
   const teams = teamStatsQuery.data;
+  const streakByPlayerId = Object.fromEntries(stats.map((row) => [row.player_id, row.current_streak]));
   const kings = topRatedRows(rankings);
   const bestWinRates = bestWinRateRows(rankings);
   const hottestStreaks = hottestStreakRows(stats);
@@ -150,7 +151,7 @@ export default function DashboardPage() {
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-start">
         <div className="grid gap-6">
-          <LeaderboardPreview rows={data.leaderboard} />
+          <LeaderboardPreview rows={data.leaderboard} streakByPlayerId={streakByPlayerId} />
           <TeamPerformanceTable teams={teams} />
         </div>
         <div className="order-3 xl:order-2">

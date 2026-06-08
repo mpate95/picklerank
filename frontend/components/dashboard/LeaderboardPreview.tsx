@@ -6,7 +6,13 @@ import { formatPercent, formatRating } from "@/lib/formatters";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 
-export function LeaderboardPreview({ rows }: { rows: DashboardSummaryResponse["leaderboard"] }) {
+export function LeaderboardPreview({
+  rows,
+  streakByPlayerId,
+}: {
+  rows: DashboardSummaryResponse["leaderboard"];
+  streakByPlayerId: Record<string, string | undefined>;
+}) {
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
@@ -20,7 +26,7 @@ export function LeaderboardPreview({ rows }: { rows: DashboardSummaryResponse["l
               <th className="pb-3">Rank</th>
               <th className="pb-3">Player</th>
               <th className="pb-3">Rating</th>
-              <th className="pb-3">Change</th>
+              <th className="pb-3">Streak</th>
               <th className="pb-3">Record</th>
               <th className="pb-3">Win %</th>
             </tr>
@@ -38,9 +44,7 @@ export function LeaderboardPreview({ rows }: { rows: DashboardSummaryResponse["l
                   </Link>
                 </td>
                 <td className="py-3 text-white">{formatRating(row.rating)}</td>
-                <td className="py-3 text-slate-400">
-                  —
-                </td>
+                <td className="py-3 text-slate-400">{streakByPlayerId[row.player_id] ?? "—"}</td>
                 <td className="py-3 text-slate-300">{row.wins}-{row.losses}</td>
                 <td className="py-3 text-slate-300">{formatPercent(row.win_percentage)}</td>
               </tr>
