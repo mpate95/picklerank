@@ -87,6 +87,31 @@ def test_single_player_stats_include_recent_form_match_history_and_rating_histor
     assert body["rating_history"][0]["rating"] == 1000.0
 
 
+def test_single_player_profile_rating_history_tracks_ranked_matches_individually(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    first = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert first.status_code == 201
+    second = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert second.status_code == 201
+
+    response = client.get(f"/stats/players/{alpha['id']}")
+
+    assert response.status_code == 200
+    history = response.json()["rating_history"]
+    assert len(history) == 3
+    assert history[0]["rating"] == 1000.0
+    assert history[1]["rating"] == 1016.0
+    assert history[2]["rating"] == 1030.53
+
+
 def test_team_stats_aggregate_pairings(client) -> None:
     session = create_session(client)
     alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]

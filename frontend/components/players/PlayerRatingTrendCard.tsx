@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 
 type ChartRow = {
   label: string;
+  sessionLabel: string;
   rating: number;
   ratingChange: number;
 };
@@ -21,7 +22,8 @@ export function PlayerRatingTrendCard({
   history: PlayerDetailStatsResponse["rating_history"];
 }) {
   const points: ChartRow[] = history.map((point, index) => ({
-    label: index === 0 ? "Start" : formatDate(point.date),
+    label: index === 0 ? "Start" : `Match ${index}`,
+    sessionLabel: index === 0 ? "Starting rating" : formatDate(point.date),
     rating: point.rating,
     ratingChange: point.rating_change,
   }));
@@ -30,7 +32,7 @@ export function PlayerRatingTrendCard({
     <Card>
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-white">Rating Trend</h3>
-        <p className="mt-1 text-sm text-slate-400">Session-to-session rating movement for {playerName}.</p>
+        <p className="mt-1 text-sm text-slate-400">Match-to-match rating movement for {playerName}.</p>
       </div>
       <div className="h-80">
         {history.length <= 1 ? (
@@ -42,11 +44,12 @@ export function PlayerRatingTrendCard({
               <XAxis dataKey="label" tick={{ fill: "#8aa1b4", fontSize: 12 }} />
               <YAxis tick={{ fill: "#8aa1b4", fontSize: 12 }} />
               <Tooltip
+                labelFormatter={(_, payload) => String(payload?.[0]?.payload?.sessionLabel ?? "")}
                 formatter={(value, name, item) => {
                   if (name === "rating") {
                     return [formatRating(Number(value ?? 0)), "Rating"];
                   }
-                  return [formatSigned(Number(item.payload.ratingChange ?? 0)), "Session change"];
+                  return [formatSigned(Number(item.payload.ratingChange ?? 0)), "Match change"];
                 }}
                 contentStyle={{ backgroundColor: "#10202d", border: "1px solid #1f3547", borderRadius: 16 }}
               />

@@ -68,6 +68,12 @@ class RankingService:
             raise NotFoundError("Player", str(player_id))
         return self._history_points_for_player(db, player)
 
+    def get_player_match_rating_history(self, db: Session, player_id: uuid.UUID) -> list[RatingHistoryPoint]:
+        player = self.ranking_repository.get_player_with_rating(db, player_id)
+        if player is None:
+            raise NotFoundError("Player", str(player_id))
+        return self._match_history_points_for_player(db, player)
+
     def get_all_rating_history(
         self,
         db: Session,
@@ -103,6 +109,18 @@ class RankingService:
             )
         ]
         points.extend(self._session_points_for_events(events))
+        return points
+
+    def _match_history_points_for_player(self, db: Session, player: Player) -> list[RatingHistoryPoint]:
+        events = self.ranking_repository.list_rating_events_for_player(db, player.id)
+        points = [
+            RatingHistoryPoint(
+                date=player.created_at.date(),
+                rating=1000.0,
+                rating_change=0.0,
+            )
+        ]
+        points.extend(self._match_points_for_events(events))
         return points
 
     @staticmethod
@@ -181,3 +199,14 @@ class RankingService:
             )
 
         return points
+
+    @staticmethod
+    def _match_points_for_events(events: list[RatingEvent]) -> list[RatingHistoryPoint]:
+        return [
+            RatingHistoryPoint(
+                date=event.match.session.session_date,
+                rating=float(event.rating_after),
+                rating_change=float(event.rating_change),
+            )
+            for event in events
+        ]

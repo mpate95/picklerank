@@ -83,7 +83,7 @@ class StatsService:
             **self._to_player_stats_response(player.id, stats).model_dump(),
             recent_form=stats.results_desc[:5],
             match_history=[self._to_match_history_response(player_id, match) for match in player_matches],
-            rating_history=self.ranking_service.get_player_rating_history(db, player_id),
+            rating_history=self.ranking_service.get_player_match_rating_history(db, player_id),
         )
 
     def get_team_stats(self, db: Session) -> list[TeamStatsResponse]:
