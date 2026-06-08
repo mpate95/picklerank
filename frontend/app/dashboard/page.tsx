@@ -114,12 +114,12 @@ export default function DashboardPage() {
   const hottestStreaks = hottestStreakRows(stats);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <SectionHeading
         title="Dashboard"
         description="Track who is climbing, who is holding court, and what just happened."
       />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:items-stretch">
         <DashboardStatCard
           eyebrow={kings.length > 1 ? "Kings of the court" : "King of the court"}
           title={kings.length > 0 ? joinNames(kings) : "No leader yet"}
