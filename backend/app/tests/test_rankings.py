@@ -172,3 +172,21 @@ def test_rating_history_only_adds_points_for_sessions_a_player_participated_in(c
     history = response.json()
     assert len(history) == 2
     assert history[1]["date"] == "2026-05-30"
+
+
+def test_ranking_history_excludes_voided_ranked_matches(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    created_match = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    ).json()
+    client.delete(f"/matches/{created_match['id']}")
+
+    response = client.get(f"/rankings/history/{alpha['id']}")
+
+    assert response.status_code == 200
+    history = response.json()
+    assert len(history) == 1
+    assert history[0]["rating"] == 1000.0

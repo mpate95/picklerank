@@ -112,6 +112,24 @@ def test_single_player_profile_rating_history_tracks_ranked_matches_individually
     assert history[2]["rating"] == 1030.53
 
 
+def test_single_player_profile_rating_history_excludes_voided_ranked_matches(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    created_match = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    ).json()
+    client.delete(f"/matches/{created_match['id']}")
+
+    response = client.get(f"/stats/players/{alpha['id']}")
+
+    assert response.status_code == 200
+    history = response.json()["rating_history"]
+    assert len(history) == 1
+    assert history[0]["rating"] == 1000.0
+
+
 def test_team_stats_aggregate_pairings(client) -> None:
     session = create_session(client)
     alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]

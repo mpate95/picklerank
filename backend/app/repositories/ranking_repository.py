@@ -26,7 +26,9 @@ class RankingRepository:
         query = (
             select(RatingEvent)
             .options(joinedload(RatingEvent.match).joinedload(Match.session))
+            .join(RatingEvent.match)
             .where(RatingEvent.player_id == player_id)
+            .where(Match.status != "voided")
             .order_by(RatingEvent.created_at.asc(), RatingEvent.id.asc())
         )
         return list(db.scalars(query))
@@ -35,6 +37,8 @@ class RankingRepository:
         query = (
             select(RatingEvent)
             .options(joinedload(RatingEvent.match).joinedload(Match.session))
+            .join(RatingEvent.match)
+            .where(Match.status != "voided")
             .order_by(RatingEvent.created_at.asc(), RatingEvent.id.asc())
         )
         if player_ids is not None:
