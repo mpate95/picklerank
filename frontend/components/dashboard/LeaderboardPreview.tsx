@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { DashboardSummaryResponse } from "@/lib/types";
 import { formatPercent, formatRating } from "@/lib/formatters";
 
@@ -28,7 +30,12 @@ export function LeaderboardPreview({ rows }: { rows: DashboardSummaryResponse["l
               <tr key={row.player_id} className="border-t border-white/5">
                 <td className="py-3 text-white">{row.rank}</td>
                 <td className="py-3">
-                  <div className="font-medium text-white">{row.display_name}</div>
+                  <Link
+                    href={`/players/${row.player_id}`}
+                    className="font-medium text-cyan underline decoration-cyan/40 underline-offset-4 transition hover:text-white hover:decoration-white"
+                  >
+                    {row.display_name}
+                  </Link>
                 </td>
                 <td className="py-3 text-white">{formatRating(row.rating)}</td>
                 <td className="py-3 text-slate-400">

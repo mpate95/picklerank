@@ -38,7 +38,6 @@ export function PlayerTable({
                       className="inline-flex items-center gap-2 text-cyan underline decoration-cyan/40 underline-offset-4 transition hover:text-white hover:decoration-white"
                     >
                       {player.display_name}
-                      <span className="text-xs uppercase tracking-[0.2em] text-cyan/70">View</span>
                     </Link>
                   </td>
                   <td className="py-3 text-slate-200">{formatRating(player.rating)}</td>
