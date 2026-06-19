@@ -6,8 +6,19 @@ import { api } from "@/lib/api";
 import { MatchResponse } from "@/lib/types";
 
 import { useAuth } from "@/components/auth/AuthProvider";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+
+function formatTournamentBracket(bracket: string) {
+  if (bracket === "grand_final") {
+    return "Grand final";
+  }
+  if (bracket === "losers") {
+    return "Losers";
+  }
+  return "Winners";
+}
 
 export function SessionMatchList({ matches, sessionId }: { matches: MatchResponse[]; sessionId: string }) {
   const { isAdmin } = useAuth();
@@ -37,6 +48,15 @@ export function SessionMatchList({ matches, sessionId }: { matches: MatchRespons
               <span>{match.is_ranked ? "Ranked" : "Unranked"}</span>
               <span>{match.status}</span>
             </div>
+            {match.tournament ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Badge className="border-cyan/20 bg-cyan/10 text-cyan">Tournament</Badge>
+                <span className="text-sm text-slate-300">{match.tournament.name}</span>
+                <span className="text-xs text-slate-500">
+                  {formatTournamentBracket(match.tournament.bracket)} R{match.tournament.round_number} G{match.tournament.slot_number}
+                </span>
+              </div>
+            ) : null}
             <div className="mt-3 flex items-center justify-between gap-4 text-sm">
               <div className={match.team_1.is_winner ? "text-lime" : "text-white"}>
                 <div className="font-medium">{match.team_1.players.map((player) => player.display_name).join(" / ")}</div>

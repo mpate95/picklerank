@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { formatDate } from "@/lib/formatters";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { SessionMatchList } from "@/components/sessions/SessionMatchList";
+import { SessionTournamentPanel } from "@/components/sessions/SessionTournamentPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -81,6 +82,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           </div>
         ) : null}
       </Card>
+      <SessionTournamentPanel sessionId={sessionId} tournaments={data.tournaments} />
       <SessionMatchList matches={data.matches} sessionId={sessionId} />
     </div>
   );

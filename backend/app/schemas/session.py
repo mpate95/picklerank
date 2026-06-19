@@ -3,6 +3,9 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from app.schemas.match import MatchResponse
+from app.schemas.tournament import TournamentResponse
+
 
 class SessionBase(BaseModel):
     name: str
@@ -45,4 +48,5 @@ class SessionResponse(BaseModel):
 class SessionDetailResponse(SessionResponse):
     created_at: datetime
     updated_at: datetime
-    matches: list[dict[str, object]]
+    matches: list[MatchResponse]
+    tournaments: list[TournamentResponse]

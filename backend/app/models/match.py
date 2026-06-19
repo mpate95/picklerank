@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.player import Player
     from app.models.rating_event import RatingEvent
     from app.models.session import Session
+    from app.models.tournament import Tournament, TournamentNode
 
 
 class Match(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -22,11 +23,23 @@ class Match(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("sessions.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    tournament_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(),
+        ForeignKey("tournaments.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    tournament_node_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(),
+        ForeignKey("tournament_nodes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     match_type: Mapped[str] = mapped_column(String, nullable=False, default="doubles")
     is_ranked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="completed")
 
     session: Mapped["Session"] = relationship(back_populates="matches")
+    tournament: Mapped["Tournament | None"] = relationship()
+    tournament_node: Mapped["TournamentNode | None"] = relationship()
     teams: Mapped[list["MatchTeam"]] = relationship(
         back_populates="match",
         cascade="all, delete-orphan",

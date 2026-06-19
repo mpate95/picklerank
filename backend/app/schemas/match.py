@@ -48,12 +48,22 @@ class MatchTeamResponse(BaseModel):
     is_winner: bool
 
 
+class MatchTournamentSummary(BaseModel):
+    id: uuid.UUID
+    name: str
+    format: str
+    bracket: str
+    round_number: int
+    slot_number: int
+
+
 class MatchResponse(BaseModel):
     id: uuid.UUID
     session_id: uuid.UUID
     match_type: str
     is_ranked: bool
     status: str
+    tournament: MatchTournamentSummary | None = None
     team_1: MatchTeamResponse
     team_2: MatchTeamResponse
     rating_events: list[MatchRatingEventResponse]

@@ -9,6 +9,7 @@ from app.api.routes.rankings import router as rankings_router
 from app.api.routes.sessions import router as sessions_router
 from app.api.routes.settings import router as settings_router
 from app.api.routes.stats import router as stats_router
+from app.api.routes.tournaments import router as tournaments_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -20,3 +21,4 @@ api_router.include_router(rankings_router)
 api_router.include_router(sessions_router)
 api_router.include_router(settings_router)
 api_router.include_router(stats_router)
+api_router.include_router(tournaments_router)

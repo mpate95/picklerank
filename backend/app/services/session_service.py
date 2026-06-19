@@ -8,6 +8,7 @@ from app.repositories.match_repository import MatchRepository
 from app.repositories.session_repository import SessionRepository
 from app.schemas.session import SessionCreate, SessionDetailResponse, SessionResponse, SessionUpdate
 from app.services.match_service import MatchService
+from app.services.tournament_service import TournamentService
 
 
 class SessionService:
@@ -19,6 +20,7 @@ class SessionService:
         self.repository = repository or SessionRepository()
         self.match_repository = match_repository or MatchRepository()
         self.match_service = MatchService(match_repository=self.match_repository, session_repository=self.repository)
+        self.tournament_service = TournamentService(session_repository=self.repository)
 
     def list_sessions(self, db: Session) -> list[SessionResponse]:
         sessions = self.repository.list_sessions(db)
@@ -43,7 +45,8 @@ class SessionService:
             **self._to_session_response(session).model_dump(),
             created_at=session.created_at,
             updated_at=session.updated_at,
-            matches=[match.model_dump(mode="json") for match in self.match_service.list_session_matches(db, session.id)],
+            matches=self.match_service.list_session_matches(db, session.id),
+            tournaments=self.tournament_service.list_session_tournaments(db, session.id),
         )
 
     def update_session(self, db: Session, session_id: uuid.UUID, payload: SessionUpdate) -> SessionResponse:

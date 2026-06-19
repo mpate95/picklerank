@@ -10,6 +10,7 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.match import Match
+    from app.models.tournament import Tournament
 
 
 class Session(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -21,3 +22,8 @@ class Session(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     matches: Mapped[list["Match"]] = relationship(back_populates="session")
+    tournaments: Mapped[list["Tournament"]] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="Tournament.created_at.desc()",
+    )

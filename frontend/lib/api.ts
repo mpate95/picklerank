@@ -5,6 +5,7 @@ import {
   CreateMatchInput,
   CreatePlayerInput,
   CreateSessionInput,
+  CreateTournamentInput,
   CurrentRankingResponse,
   DashboardSummaryResponse,
   LeaderboardSettingsResponse,
@@ -17,6 +18,8 @@ import {
   SessionDetailResponse,
   SessionResponse,
   TeamStatsResponse,
+  TournamentResponse,
+  UpdateTournamentNodeScoreInput,
   UpdatePlayerInput,
 } from "@/lib/types";
 
@@ -99,6 +102,16 @@ export const api = {
     request<MatchResponse>("/matches", { method: "POST", body: JSON.stringify(payload) }),
   voidMatch: (matchId: string) =>
     request<MatchResponse>(`/matches/${matchId}`, { method: "DELETE" }),
+  createTournament: (sessionId: string, payload: CreateTournamentInput) =>
+    request<TournamentResponse>(`/sessions/${sessionId}/tournaments`, { method: "POST", body: JSON.stringify(payload) }),
+  updateTournamentNodeScore: (tournamentId: string, nodeId: string, payload: UpdateTournamentNodeScoreInput) =>
+    request<TournamentResponse>(`/tournaments/${tournamentId}/nodes/${nodeId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  finalizeTournament: (tournamentId: string) =>
+    request<TournamentResponse>(`/tournaments/${tournamentId}/finalize`, { method: "POST" }),
+  revokeTournament: (tournamentId: string) =>
+    request<TournamentResponse>(`/tournaments/${tournamentId}/revoke`, { method: "POST" }),
+  deleteTournament: (tournamentId: string) =>
+    request<void>(`/tournaments/${tournamentId}`, { method: "DELETE" }),
   getCurrentRankings: () => request<CurrentRankingResponse[]>("/rankings/current"),
   getLeaderboardSettings: () => request<LeaderboardSettingsResponse>("/settings/leaderboard"),
   updateLeaderboardSettings: (payload: LeaderboardSettingsResponse) =>

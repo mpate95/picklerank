@@ -62,12 +62,65 @@ export type MatchRatingEventResponse = {
   rating_change: number;
 };
 
+export type MatchTournamentSummary = {
+  id: string;
+  name: string;
+  format: string;
+  bracket: string;
+  round_number: number;
+  slot_number: number;
+};
+
+export type TournamentPlayerSummary = {
+  id: string;
+  display_name: string;
+};
+
+export type TournamentEntryResponse = {
+  id: string;
+  seed: number;
+  player_1: TournamentPlayerSummary;
+  player_2: TournamentPlayerSummary;
+};
+
+export type TournamentNodeResponse = {
+  id: string;
+  bracket: string;
+  round_number: number;
+  slot_number: number;
+  status: string;
+  team_1: TournamentEntryResponse | null;
+  team_2: TournamentEntryResponse | null;
+  team_1_score: number | null;
+  team_2_score: number | null;
+  winner_entry_id: string | null;
+};
+
+export type TournamentResponse = {
+  id: string;
+  session_id: string;
+  name: string;
+  format: "single_elimination" | "double_elimination";
+  status: "draft" | "finalized";
+  bracket_size: number;
+  finalized_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  updated_at: string;
+  can_finalize: boolean;
+  can_revoke: boolean;
+  materialized_match_count: number;
+  entries: TournamentEntryResponse[];
+  nodes: TournamentNodeResponse[];
+};
+
 export type MatchResponse = {
   id: string;
   session_id: string;
   match_type: string;
   is_ranked: boolean;
   status: string;
+  tournament: MatchTournamentSummary | null;
   team_1: MatchTeamResponse;
   team_2: MatchTeamResponse;
   rating_events: MatchRatingEventResponse[];
@@ -77,6 +130,7 @@ export type SessionDetailResponse = SessionResponse & {
   created_at: string;
   updated_at: string;
   matches: MatchResponse[];
+  tournaments: TournamentResponse[];
 };
 
 export type CurrentRankingResponse = {
@@ -212,4 +266,19 @@ export type CreateMatchInput = {
   is_ranked: boolean;
   team_1: { player_ids: string[]; score: number };
   team_2: { player_ids: string[]; score: number };
+};
+
+export type CreateTournamentInput = {
+  name: string;
+  format: "single_elimination" | "double_elimination";
+  entries: Array<{
+    seed: number;
+    player_1_id: string;
+    player_2_id: string;
+  }>;
+};
+
+export type UpdateTournamentNodeScoreInput = {
+  team_1_score: number | null;
+  team_2_score: number | null;
 };

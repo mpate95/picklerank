@@ -21,6 +21,7 @@ from app.schemas.match import (
     MatchResponse,
     MatchTeamCreate,
     MatchTeamResponse,
+    MatchTournamentSummary,
     MatchUpdate,
 )
 
@@ -56,6 +57,47 @@ class MatchService:
         return [self._to_match_response(match) for match in matches]
 
     def create_match(self, db: Session, payload: MatchCreate) -> MatchResponse:
+        match = self._create_match_record(db, payload)
+        db.commit()
+        session = self.session_repository.get_session(db, payload.session_id)
+        if session is not None:
+            db.refresh(session)
+        return self._to_match_response(self._get_match_or_raise(db, match.id))
+
+    def create_materialized_tournament_match(
+        self,
+        db: Session,
+        *,
+        session_id: uuid.UUID,
+        team_1_player_ids: list[uuid.UUID],
+        team_2_player_ids: list[uuid.UUID],
+        team_1_score: int,
+        team_2_score: int,
+        tournament_id: uuid.UUID,
+        tournament_node_id: uuid.UUID,
+    ) -> Match:
+        payload = MatchCreate(
+            session_id=session_id,
+            match_type="doubles",
+            is_ranked=True,
+            team_1=MatchTeamCreate(player_ids=team_1_player_ids, score=team_1_score),
+            team_2=MatchTeamCreate(player_ids=team_2_player_ids, score=team_2_score),
+        )
+        return self._create_match_record(
+            db,
+            payload,
+            tournament_id=tournament_id,
+            tournament_node_id=tournament_node_id,
+        )
+
+    def _create_match_record(
+        self,
+        db: Session,
+        payload: MatchCreate,
+        *,
+        tournament_id: uuid.UUID | None = None,
+        tournament_node_id: uuid.UUID | None = None,
+    ) -> Match:
         session = self.session_repository.get_session(db, payload.session_id)
         if session is None:
             raise NotFoundError("Session", str(payload.session_id))
@@ -70,6 +112,8 @@ class MatchService:
 
         match = Match(
             session_id=session.id,
+            tournament_id=tournament_id,
+            tournament_node_id=tournament_node_id,
             match_type=payload.match_type,
             is_ranked=payload.is_ranked,
             status="completed",
@@ -88,10 +132,8 @@ class MatchService:
             )
 
         self.match_repository.add(db, match)
-        db.commit()
-        db.refresh(match)
-        db.refresh(session)
-        return self._to_match_response(self._get_match_or_raise(db, match.id))
+        db.flush()
+        return match
 
     def get_match(self, db: Session, match_id: uuid.UUID) -> MatchResponse:
         return self._to_match_response(self._get_match_or_raise(db, match_id))
@@ -135,6 +177,14 @@ class MatchService:
 
     def void_match(self, db: Session, match_id: uuid.UUID) -> MatchResponse:
         match = self._get_match_or_raise(db, match_id)
+        self._void_match_record(db, match)
+        db.commit()
+        return self._to_match_response(self._get_match_or_raise(db, match.id))
+
+    def void_materialized_match(self, db: Session, match: Match) -> None:
+        self._void_match_record(db, match)
+
+    def _void_match_record(self, db: Session, match: Match) -> None:
         if match.status == "voided":
             raise BadRequestError("Match is already voided.")
 
@@ -148,8 +198,7 @@ class MatchService:
                 rating_event.player.rating.rating = rating_event.rating_before
 
         match.status = "voided"
-        db.commit()
-        return self._to_match_response(self._get_match_or_raise(db, match.id))
+        db.flush()
 
     def count_session_matches(self, db: Session, session_id: uuid.UUID, *, include_voided: bool = False) -> int:
         return self.match_repository.count_for_session(db, session_id, include_voided=include_voided)
@@ -278,6 +327,18 @@ class MatchService:
             match_type=match.match_type,
             is_ranked=match.is_ranked,
             status=match.status,
+            tournament=(
+                MatchTournamentSummary(
+                    id=match.tournament.id,
+                    name=match.tournament.name,
+                    format=match.tournament.format,
+                    bracket=match.tournament_node.bracket,
+                    round_number=match.tournament_node.round_number,
+                    slot_number=match.tournament_node.slot_number,
+                )
+                if match.tournament is not None and match.tournament_node is not None
+                else None
+            ),
             team_1=cls._to_team_response(teams_by_number[1]),
             team_2=cls._to_team_response(teams_by_number[2]),
             rating_events=[

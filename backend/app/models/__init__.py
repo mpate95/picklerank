@@ -5,6 +5,7 @@ from app.models.player import Player
 from app.models.rating import PlayerRating
 from app.models.rating_event import RatingEvent
 from app.models.session import Session
+from app.models.tournament import Tournament, TournamentEntry, TournamentNode
 
 __all__ = [
     "Base",
@@ -16,4 +17,7 @@ __all__ = [
     "PlayerRating",
     "RatingEvent",
     "Session",
+    "Tournament",
+    "TournamentEntry",
+    "TournamentNode",
 ]

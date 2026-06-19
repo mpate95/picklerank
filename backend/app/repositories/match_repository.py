@@ -41,9 +41,25 @@ class MatchRepository:
             query = query.where(Match.status != "voided")
         return int(db.scalar(query) or 0)
 
+    def list_tournament_matches(
+        self,
+        db: Session,
+        tournament_id: uuid.UUID,
+        *,
+        include_voided: bool = True,
+    ) -> list[Match]:
+        query = self._base_query().where(Match.tournament_id == tournament_id)
+        if not include_voided:
+            query = query.where(Match.status != "voided")
+        return list(db.scalars(query).unique())
+
     def get_latest_ranked_completed_match(self, db: Session) -> Match | None:
         query = self._base_query().where(Match.is_ranked.is_(True), Match.status == "completed")
         return db.scalar(query.limit(1))
+
+    def list_latest_ranked_completed_matches(self, db: Session, *, limit: int) -> list[Match]:
+        query = self._base_query().where(Match.is_ranked.is_(True), Match.status == "completed").limit(limit)
+        return list(db.scalars(query).unique())
 
     @staticmethod
     def _base_query():
@@ -51,6 +67,8 @@ class MatchRepository:
             select(Match)
             .options(
                 joinedload(Match.session),
+                joinedload(Match.tournament),
+                joinedload(Match.tournament_node),
                 selectinload(Match.teams)
                 .selectinload(MatchTeam.team_players)
                 .joinedload(MatchTeamPlayer.player),
