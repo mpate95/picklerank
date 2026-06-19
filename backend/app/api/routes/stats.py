@@ -24,3 +24,8 @@ def get_single_player_stats(player_id: uuid.UUID, db: Session = Depends(get_db))
 @router.get("/teams", response_model=list[TeamStatsResponse])
 def get_team_stats(db: Session = Depends(get_db)) -> list[TeamStatsResponse]:
     return service.get_team_stats(db)
+
+
+@router.get("/singles", response_model=list[PlayerStatsResponse])
+def get_singles_stats(db: Session = Depends(get_db)) -> list[PlayerStatsResponse]:
+    return service.get_singles_stats(db)

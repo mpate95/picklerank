@@ -240,3 +240,38 @@ def test_singles_matches_count_toward_player_stats_but_not_team_stats(client) ->
     assert len(body) == 2
     assert all("Alpha" not in {row["player_1_name"], row["player_2_name"]} for row in body)
     assert all("Bravo" not in {row["player_1_name"], row["player_2_name"]} for row in body)
+
+
+def test_singles_stats_only_show_players_with_singles_history(client) -> None:
+    session = create_session(client)
+    alpha = create_player(client, "Alpha")
+    bravo = create_player(client, "Bravo")
+    charlie = create_player(client, "Charlie")
+    delta = create_player(client, "Delta")
+    echo = create_player(client, "Echo")
+    foxtrot = create_player(client, "Foxtrot")
+
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"]], [bravo["id"]], match_type="singles", team_1_score=11, team_2_score=6),
+    )
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"]], [echo["id"]], match_type="singles", team_1_score=8, team_2_score=11),
+    )
+    client.post(
+        "/matches",
+        json=match_payload(session["id"], [charlie["id"], delta["id"]], [echo["id"], foxtrot["id"]]),
+    )
+
+    response = client.get("/stats/singles")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [row["display_name"] for row in body] == ["Echo", "Alpha", "Bravo"]
+    alpha_row = next(row for row in body if row["display_name"] == "Alpha")
+    assert alpha_row["games_played"] == 2
+    assert alpha_row["wins"] == 1
+    assert alpha_row["losses"] == 1
+    assert alpha_row["current_streak"] == "L1"
+    assert all(row["display_name"] not in {"Charlie", "Delta", "Foxtrot"} for row in body)

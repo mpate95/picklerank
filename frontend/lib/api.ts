@@ -107,5 +107,6 @@ export const api = {
   getAllRatingHistory: () => request<PlayerRatingTrendResponse[]>("/rankings/history"),
   getPlayerStats: () => request<PlayerStatsResponse[]>("/stats/players"),
   getSinglePlayerStats: (playerId: string) => request<PlayerDetailStatsResponse>(`/stats/players/${playerId}`),
+  getSinglesStats: () => request<PlayerStatsResponse[]>("/stats/singles"),
   getTeamStats: () => request<TeamStatsResponse[]>("/stats/teams"),
 };

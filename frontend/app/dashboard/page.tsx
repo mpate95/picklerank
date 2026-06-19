@@ -9,6 +9,7 @@ import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
 import { LeaderboardPreview } from "@/components/dashboard/LeaderboardPreview";
 import { RatingTrendChart } from "@/components/dashboard/RatingTrendChart";
 import { RecentMatches } from "@/components/dashboard/RecentMatches";
+import { SinglesPerformanceTable } from "@/components/dashboard/SinglesPerformanceTable";
 import { TeamPerformanceTable } from "@/components/dashboard/TeamPerformanceTable";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -87,8 +88,12 @@ export default function DashboardPage() {
     queryKey: ["stats", "teams"],
     queryFn: api.getTeamStats,
   });
+  const singlesStatsQuery = useQuery({
+    queryKey: ["stats", "singles"],
+    queryFn: api.getSinglesStats,
+  });
 
-  if (isLoading || rankingsQuery.isLoading || statsQuery.isLoading || teamStatsQuery.isLoading) {
+  if (isLoading || rankingsQuery.isLoading || statsQuery.isLoading || teamStatsQuery.isLoading || singlesStatsQuery.isLoading) {
     return <div className="text-sm text-slate-400">Loading dashboard...</div>;
   }
 
@@ -97,10 +102,12 @@ export default function DashboardPage() {
     rankingsQuery.error ||
     statsQuery.error ||
     teamStatsQuery.error ||
+    singlesStatsQuery.error ||
     !data ||
     !rankingsQuery.data ||
     !statsQuery.data ||
-    !teamStatsQuery.data
+    !teamStatsQuery.data ||
+    !singlesStatsQuery.data
   ) {
     return <div className="text-sm text-coral">{error instanceof Error ? error.message : "Failed to load dashboard."}</div>;
   }
@@ -108,6 +115,7 @@ export default function DashboardPage() {
   const rankings = rankingsQuery.data;
   const stats = statsQuery.data;
   const teams = teamStatsQuery.data;
+  const singlesPlayers = singlesStatsQuery.data;
   const streakByPlayerId = Object.fromEntries(stats.map((row) => [row.player_id, row.current_streak]));
   const kings = topRatedRows(rankings);
   const bestWinRates = bestWinRateRows(rankings);
@@ -153,6 +161,7 @@ export default function DashboardPage() {
         <div className="grid gap-6">
           <LeaderboardPreview rows={data.leaderboard} streakByPlayerId={streakByPlayerId} />
           <TeamPerformanceTable teams={teams} />
+          <SinglesPerformanceTable players={singlesPlayers} />
         </div>
         <div className="order-3 xl:order-2">
           <RecentMatches matches={data.recent_matches} />

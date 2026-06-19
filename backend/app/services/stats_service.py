@@ -113,6 +113,24 @@ class StatsService:
             )
         ]
 
+    def get_singles_stats(self, db: Session) -> list[PlayerStatsResponse]:
+        matches = self.match_repository.list_matches(db, include_voided=False)
+        singles_matches = [match for match in matches if match.match_type == "singles"]
+        stats_by_player = self._aggregate_player_stats(singles_matches)
+        return [
+            self._to_player_stats_response(player_id, stats)
+            for player_id, stats in sorted(
+                stats_by_player.items(),
+                key=lambda item: (
+                    -item[1].wins,
+                    -self._win_percentage(item[1].wins, item[1].games_played),
+                    -item[1].games_played,
+                    -(item[1].points_for - item[1].points_against),
+                    item[1].display_name.lower(),
+                ),
+            )
+        ]
+
     @staticmethod
     def _aggregate_player_stats(matches: list[Match]) -> dict[uuid.UUID, AggregatedPlayerStats]:
         stats_by_player: dict[uuid.UUID, AggregatedPlayerStats] = {}
