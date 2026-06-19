@@ -10,6 +10,7 @@ from app.core.errors import NotFoundError
 from app.models.match import Match
 from app.models.player import Player
 from app.models.rating_event import RatingEvent
+from app.services.app_settings_service import AppSettingsService
 from app.repositories.match_repository import MatchRepository
 from app.repositories.ranking_repository import RankingRepository
 from app.schemas.ranking import CurrentRankingResponse, PlayerRatingTrendResponse, RatingHistoryPoint
@@ -27,18 +28,30 @@ class RankingService:
         self,
         ranking_repository: RankingRepository | None = None,
         match_repository: MatchRepository | None = None,
+        app_settings_service: AppSettingsService | None = None,
     ) -> None:
         self.ranking_repository = ranking_repository or RankingRepository()
         self.match_repository = match_repository or MatchRepository()
+        self.app_settings_service = app_settings_service or AppSettingsService()
 
     def get_current_rankings(self, db: Session) -> list[CurrentRankingResponse]:
         players = self.ranking_repository.list_active_players_with_ratings(db)
+        settings = self.app_settings_service.get_leaderboard_settings(db)
         stats_by_player = self._build_stats_by_player(
             self.match_repository.list_matches(db, include_voided=False)
         )
+        eligible_players = [
+            player
+            for player in players
+            if self.is_player_leaderboard_qualified(
+                stats=stats_by_player.get(player.id, PlayerMatchStats()),
+                qualifier_enabled=settings.leaderboard_qualifier_enabled,
+                qualifier_min_games=settings.leaderboard_qualifier_min_games,
+            )
+        ]
 
         ranked_players = sorted(
-            players,
+            eligible_players,
             key=lambda player: self._ranking_sort_key(
                 player,
                 stats_by_player.get(player.id, PlayerMatchStats()),
@@ -61,6 +74,21 @@ class RankingService:
                 )
             )
         return leaderboard
+
+    def get_leaderboard_qualification_status(self, db: Session, player_id: uuid.UUID) -> tuple[bool, int]:
+        settings = self.app_settings_service.get_leaderboard_settings(db)
+        if not settings.leaderboard_qualifier_enabled:
+            return True, settings.leaderboard_qualifier_min_games
+
+        stats_by_player = self._build_stats_by_player(
+            self.match_repository.list_matches(db, include_voided=False)
+        )
+        is_qualified = self.is_player_leaderboard_qualified(
+            stats=stats_by_player.get(player_id, PlayerMatchStats()),
+            qualifier_enabled=settings.leaderboard_qualifier_enabled,
+            qualifier_min_games=settings.leaderboard_qualifier_min_games,
+        )
+        return is_qualified, settings.leaderboard_qualifier_min_games
 
     def get_player_rating_history(self, db: Session, player_id: uuid.UUID) -> list[RatingHistoryPoint]:
         player = self.ranking_repository.get_player_with_rating(db, player_id)
@@ -146,6 +174,17 @@ class RankingService:
             return 0.0
         latest_point = history[-1]
         return float(latest_point.rating_change)
+
+    @staticmethod
+    def is_player_leaderboard_qualified(
+        *,
+        stats: PlayerMatchStats,
+        qualifier_enabled: bool,
+        qualifier_min_games: int,
+    ) -> bool:
+        if not qualifier_enabled:
+            return True
+        return stats.games_played >= qualifier_min_games
 
     @staticmethod
     def _win_percentage(stats: PlayerMatchStats) -> float:

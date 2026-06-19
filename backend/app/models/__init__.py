@@ -1,3 +1,4 @@
+from app.models.app_settings import AppSettings
 from app.models.base import Base
 from app.models.match import Match, MatchTeam, MatchTeamPlayer
 from app.models.player import Player
@@ -7,6 +8,7 @@ from app.models.session import Session
 
 __all__ = [
     "Base",
+    "AppSettings",
     "Match",
     "MatchTeam",
     "MatchTeamPlayer",

@@ -37,3 +37,5 @@ class PlayerResponse(PlayerBase):
 
 class PlayerDetailResponse(PlayerResponse):
     current_rank: int | None = None
+    is_leaderboard_qualified: bool = True
+    leaderboard_qualifier_min_games: int = 0

@@ -30,6 +30,8 @@ export type PlayerResponse = {
 
 export type PlayerDetailResponse = PlayerResponse & {
   current_rank: number | null;
+  is_leaderboard_qualified: boolean;
+  leaderboard_qualifier_min_games: number;
 };
 
 export type SessionResponse = {
@@ -175,6 +177,11 @@ export type DashboardSummaryResponse = {
     winner_team_number: number;
   }>;
   rating_trends: PlayerRatingTrendResponse[];
+};
+
+export type LeaderboardSettingsResponse = {
+  leaderboard_qualifier_enabled: boolean;
+  leaderboard_qualifier_min_games: number;
 };
 
 export type CreatePlayerInput = {

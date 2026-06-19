@@ -77,6 +77,31 @@ def test_unranked_matches_contribute_to_stats_but_not_rating(client) -> None:
     assert alpha_row["rating_change_last_session"] == 0.0
 
 
+def test_current_rankings_hide_players_below_qualifier_threshold(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    settings_response = client.patch(
+        "/settings/leaderboard",
+        json={
+            "leaderboard_qualifier_enabled": True,
+            "leaderboard_qualifier_min_games": 2,
+        },
+    )
+    assert settings_response.status_code == 200
+
+    create_match = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert create_match.status_code == 201
+
+    response = client.get("/rankings/current")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 def test_player_rating_history_includes_initial_point_and_events(client) -> None:
     session = create_session(client)
     alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]

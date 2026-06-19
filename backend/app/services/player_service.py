@@ -39,7 +39,16 @@ class PlayerService:
     def get_player(self, db: Session, player_id: uuid.UUID) -> PlayerDetailResponse:
         player = self._get_player_or_raise(db, player_id)
         current_rank = self._get_current_rank(db, player)
-        return self._to_player_detail_response(player, current_rank=current_rank)
+        is_leaderboard_qualified, leaderboard_qualifier_min_games = self.ranking_service.get_leaderboard_qualification_status(
+            db,
+            player.id,
+        )
+        return self._to_player_detail_response(
+            player,
+            current_rank=current_rank,
+            is_leaderboard_qualified=is_leaderboard_qualified,
+            leaderboard_qualifier_min_games=leaderboard_qualifier_min_games,
+        )
 
     def update_player(self, db: Session, player_id: uuid.UUID, payload: PlayerUpdate) -> PlayerResponse:
         player = self._get_player_or_raise(db, player_id)
@@ -81,5 +90,17 @@ class PlayerService:
         )
 
     @classmethod
-    def _to_player_detail_response(cls, player: Player, *, current_rank: int | None) -> PlayerDetailResponse:
-        return PlayerDetailResponse(**cls._to_player_response(player).model_dump(), current_rank=current_rank)
+    def _to_player_detail_response(
+        cls,
+        player: Player,
+        *,
+        current_rank: int | None,
+        is_leaderboard_qualified: bool,
+        leaderboard_qualifier_min_games: int,
+    ) -> PlayerDetailResponse:
+        return PlayerDetailResponse(
+            **cls._to_player_response(player).model_dump(),
+            current_rank=current_rank,
+            is_leaderboard_qualified=is_leaderboard_qualified,
+            leaderboard_qualifier_min_games=leaderboard_qualifier_min_games,
+        )

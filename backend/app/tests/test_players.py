@@ -65,6 +65,49 @@ def test_get_player_returns_current_rank(client) -> None:
     assert lower_player["id"] != higher_player["id"]
 
 
+def test_get_player_shows_unranked_when_below_leaderboard_qualifier(client) -> None:
+    session_response = client.post(
+        "/sessions",
+        json={"name": "Saturday Pickleball - May 30, 2026", "session_date": "2026-05-30"},
+    )
+    assert session_response.status_code == 201
+    session = session_response.json()
+    alpha = client.post("/players", json={"display_name": "Alpha"}).json()
+    bravo = client.post("/players", json={"display_name": "Bravo"}).json()
+    charlie = client.post("/players", json={"display_name": "Charlie"}).json()
+    delta = client.post("/players", json={"display_name": "Delta"}).json()
+
+    settings_response = client.patch(
+        "/settings/leaderboard",
+        json={
+            "leaderboard_qualifier_enabled": True,
+            "leaderboard_qualifier_min_games": 2,
+        },
+    )
+    assert settings_response.status_code == 200
+
+    match_response = client.post(
+        "/matches",
+        json={
+            "session_id": session["id"],
+            "match_type": "doubles",
+            "is_ranked": True,
+            "team_1": {"player_ids": [alpha["id"], bravo["id"]], "score": 11},
+            "team_2": {"player_ids": [charlie["id"], delta["id"]], "score": 8},
+        },
+    )
+    assert match_response.status_code == 201
+
+    response = client.get(f"/players/{alpha['id']}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["rating"] == 1016.0
+    assert body["current_rank"] is None
+    assert body["is_leaderboard_qualified"] is False
+    assert body["leaderboard_qualifier_min_games"] == 2
+
+
 def test_update_player_changes_provided_fields_only(client) -> None:
     created_player = client.post(
         "/players",

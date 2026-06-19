@@ -7,6 +7,7 @@ import {
   CreateSessionInput,
   CurrentRankingResponse,
   DashboardSummaryResponse,
+  LeaderboardSettingsResponse,
   MatchResponse,
   PlayerDetailResponse,
   PlayerDetailStatsResponse,
@@ -99,6 +100,9 @@ export const api = {
   voidMatch: (matchId: string) =>
     request<MatchResponse>(`/matches/${matchId}`, { method: "DELETE" }),
   getCurrentRankings: () => request<CurrentRankingResponse[]>("/rankings/current"),
+  getLeaderboardSettings: () => request<LeaderboardSettingsResponse>("/settings/leaderboard"),
+  updateLeaderboardSettings: (payload: LeaderboardSettingsResponse) =>
+    request<LeaderboardSettingsResponse>("/settings/leaderboard", { method: "PATCH", body: JSON.stringify(payload) }),
   getRatingHistory: (playerId: string) => request(`/rankings/history/${playerId}`),
   getAllRatingHistory: () => request<PlayerRatingTrendResponse[]>("/rankings/history"),
   getPlayerStats: () => request<PlayerStatsResponse[]>("/stats/players"),

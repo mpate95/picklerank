@@ -77,3 +77,31 @@ def test_dashboard_summary_handles_empty_state(client) -> None:
     assert body["leaderboard"] == []
     assert body["recent_matches"] == []
     assert body["rating_trends"] == []
+
+
+def test_dashboard_leaderboard_respects_global_qualifier(client) -> None:
+    session = create_session(client)
+    alpha, bravo, charlie, delta = [create_player(client, name) for name in ["Alpha", "Bravo", "Charlie", "Delta"]]
+
+    settings_response = client.patch(
+        "/settings/leaderboard",
+        json={
+            "leaderboard_qualifier_enabled": True,
+            "leaderboard_qualifier_min_games": 2,
+        },
+    )
+    assert settings_response.status_code == 200
+
+    match_response = client.post(
+        "/matches",
+        json=match_payload(session["id"], [alpha["id"], bravo["id"]], [charlie["id"], delta["id"]]),
+    )
+    assert match_response.status_code == 201
+
+    response = client.get("/dashboard/summary")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["leaderboard"] == []
+    assert body["top_player"] is None
+    assert len(body["rating_trends"]) == 4

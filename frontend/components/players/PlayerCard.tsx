@@ -17,6 +17,8 @@ export function PlayerCard({
   actions?: ReactNode;
   heading?: ReactNode;
 }) {
+  const rankLabel = !player.is_active ? "Rank -" : player.current_rank !== null ? `Rank #${player.current_rank}` : "Unranked";
+
   return (
     <Card>
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -28,9 +30,14 @@ export function PlayerCard({
           </div>
           <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-300">
             <span>Rating {formatRating(player.rating)}</span>
-            <span>Rank #{player.current_rank ?? "-"}</span>
+            <span>{rankLabel}</span>
             <span>Streak {stats.current_streak}</span>
           </div>
+          {player.is_active && !player.is_leaderboard_qualified ? (
+            <p className="mt-3 text-sm text-slate-400">
+              This player is below the leaderboard qualifier of {player.leaderboard_qualifier_min_games} games.
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[260px]">
           {actions ? <div className="sm:col-span-2">{actions}</div> : null}
