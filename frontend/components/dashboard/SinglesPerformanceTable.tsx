@@ -32,7 +32,7 @@ function parseStreakValue(streak: string | undefined) {
   return 0;
 }
 
-export function SinglesPerformanceTable({ players }: { players: PlayerStatsResponse[] }) {
+export function SinglesPerformanceTable({ players, limit }: { players: PlayerStatsResponse[]; limit?: number }) {
   const [sortOption, setSortOption] = useState<SortOption>("default");
 
   const sortedPlayers = useMemo(() => {
@@ -76,12 +76,16 @@ export function SinglesPerformanceTable({ players }: { players: PlayerStatsRespo
     return nextPlayers;
   }, [players, sortOption]);
 
+  const visiblePlayers = limit ? sortedPlayers.slice(0, limit) : sortedPlayers;
+
   return (
     <Card>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-white">Singles Rankings</h3>
-          <p className="mt-1 text-sm text-slate-400">Only players with singles matches are included here.</p>
+          <p className="mt-1 text-sm text-slate-400">
+            Only players with singles matches are included here{limit ? `. Showing top ${limit}.` : "."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <label htmlFor="singles-rankings-sort" className="text-sm text-slate-400">
@@ -103,7 +107,7 @@ export function SinglesPerformanceTable({ players }: { players: PlayerStatsRespo
           </select>
         </div>
       </div>
-      {sortedPlayers.length === 0 ? (
+      {visiblePlayers.length === 0 ? (
         <p className="text-sm text-slate-400">No singles history yet.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -118,7 +122,7 @@ export function SinglesPerformanceTable({ players }: { players: PlayerStatsRespo
               </tr>
             </thead>
             <tbody>
-              {sortedPlayers.map((player, index) => (
+              {visiblePlayers.map((player, index) => (
                 <tr key={player.player_id} className="border-t border-white/5">
                   <td className="py-4 text-white">{index + 1}</td>
                   <td className="py-4">

@@ -160,8 +160,8 @@ export default function DashboardPage() {
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-start">
         <div className="grid gap-6">
           <LeaderboardPreview rows={data.leaderboard} streakByPlayerId={streakByPlayerId} />
-          <TeamPerformanceTable teams={teams} />
-          <SinglesPerformanceTable players={singlesPlayers} />
+          <TeamPerformanceTable teams={teams} limit={10} />
+          <SinglesPerformanceTable players={singlesPlayers} limit={10} />
         </div>
         <div className="order-3 xl:order-2">
           <RecentMatches matches={data.recent_matches} />

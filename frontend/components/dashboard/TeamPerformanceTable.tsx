@@ -36,7 +36,7 @@ function compareTeams(left: TeamStatsResponse, right: TeamStatsResponse) {
   return `${left.player_1_name} ${left.player_2_name}`.localeCompare(`${right.player_1_name} ${right.player_2_name}`);
 }
 
-export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) {
+export function TeamPerformanceTable({ teams, limit }: { teams: TeamStatsResponse[]; limit?: number }) {
   const [sortOption, setSortOption] = useState<SortOption>("default");
 
   const sortedTeams = useMemo(() => {
@@ -80,12 +80,16 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
     return nextTeams;
   }, [teams, sortOption]);
 
+  const visibleTeams = limit ? sortedTeams.slice(0, limit) : sortedTeams;
+
   return (
     <Card>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-white">Team Rankings</h3>
-          <p className="mt-1 text-sm text-slate-400">Doubles pairings ranked by wins, win rate, volume, and current streak.</p>
+          <p className="mt-1 text-sm text-slate-400">
+            Doubles pairings ranked by wins, win rate, volume, and current streak{limit ? `. Showing top ${limit}.` : "."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <label htmlFor="team-rankings-sort" className="text-sm text-slate-400">
@@ -107,7 +111,7 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
           </select>
         </div>
       </div>
-      {sortedTeams.length === 0 ? (
+      {visibleTeams.length === 0 ? (
         <p className="text-sm text-slate-400">No doubles team history yet.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -122,7 +126,7 @@ export function TeamPerformanceTable({ teams }: { teams: TeamStatsResponse[] }) 
               </tr>
             </thead>
             <tbody>
-              {sortedTeams.map((team, index) => (
+              {visibleTeams.map((team, index) => (
                 <tr key={`${team.player_1_id}-${team.player_2_id}`} className="border-t border-white/5">
                   <td className="py-4 text-white">{index + 1}</td>
                   <td className="py-4">
